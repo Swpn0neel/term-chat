@@ -1,0 +1,33 @@
+# Dev & Config
+.env
+.env.*
+.git/
+.gitignore
+.npmignore
+.planning/
+.session.json
+ai-debug.log
+scratch/
+PLAN.md
+tsup.config.ts
+tsconfig.json
+prisma.config.ts
+termui.config.ts
+termui.config.json
+schema.sql
+
+# Source
+src/
+prisma/
+
+# Testing
+tests/
+test/
+*.test.ts
+*.spec.ts
+
+# Housekeeping
+package-lock.json
+*.log
+.vscode/
+.idea/

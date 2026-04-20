@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // bcrypt hash
+  isOnline  Boolean  @default(false)
+  lastSeen  DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  sentRequests     FriendRequest[] @relation("Sender")
+  receivedRequests FriendRequest[] @relation("Receiver")
+  sentMessages     Message[]       @relation("Sender")
+  receivedMessages Message[]       @relation("Receiver")
+}
+
+model FriendRequest {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     Status   @default(PENDING)
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("Sender",   fields: [senderId],   references: [id])
+  receiver User @relation("Receiver", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+}
+
+enum Status {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model Message {
+  id           String   @id @default(cuid())
+  senderId     String
+  receiverId   String
+  content      String
+  isAIChat     Boolean  @default(false)
+  isAIResponse Boolean  @default(false)
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  sender   User @relation("Sender",   fields: [senderId],   references: [id])
+  receiver User @relation("Receiver", fields: [receiverId], references: [id])
+}
