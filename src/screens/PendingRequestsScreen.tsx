@@ -89,7 +89,9 @@ export default function PendingRequestsScreen({ user, navigate }: any) {
           </Box>
         ) : (
           <Box flexDirection="column" padding={1}>
-            <Text bold marginBottom={1}>Choose a request and use A (Accept) or D (Decline):</Text>
+            <Box marginBottom={1}>
+              <Text bold>Choose a request and use A (Accept) or D (Decline):</Text>
+            </Box>
             {requests.map((req, idx) => {
               const isActive = idx === selectedIndex;
               return (

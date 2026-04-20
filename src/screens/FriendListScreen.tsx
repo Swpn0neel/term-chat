@@ -53,7 +53,9 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
         ) : friends.length === 0 ? (
           <Box padding={1} flexDirection="column">
             <Text dimColor>Your friend list is empty.</Text>
-            <Text marginTop={1}>Go to 'Add Friend' to connect with others!</Text>
+            <Box marginTop={1}>
+              <Text>Go to 'Add Friend' to connect with others!</Text>
+            </Box>
           </Box>
         ) : (
           <Box padding={1}>

@@ -7,9 +7,11 @@ import { Spinner } from '../components/ui/feedback/Spinner';
 import { AuthService } from '../services/authService';
 import { SessionService } from '../services/sessionService';
 
+import { Screen } from '../App';
+
 interface AuthScreenProps {
   onAuth: (user: any) => void;
-  navigate: (screen: string) => void;
+  navigate: (screen: Screen, params?: Record<string, string>) => void;
 }
 
 export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {

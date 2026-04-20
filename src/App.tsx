@@ -12,7 +12,7 @@ import { AuthService } from './services/authService';
 import { SocialService } from './services/socialService';
 import { shutdown } from './lib/shutdown';
 
-type Screen =
+export type Screen =
   | 'auth' | 'dashboard' | 'add-friend'
   | 'pending' | 'friend-list' | 'chat' | 'ai-chat';
 
