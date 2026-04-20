@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
-import { Status } from '@prisma/client';
+import pkg_prisma from '@prisma/client';
+const { Status } = pkg_prisma;
 
 export class SocialService {
   /**
