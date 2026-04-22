@@ -9,6 +9,7 @@ import { SocialService } from '../services/socialService';
 import { prisma } from '../lib/prisma';
 import { shutdown } from '../lib/shutdown';
 import { Heading } from '../components/ui/typography/Heading';
+import { formatLastSeen } from '../lib/dateUtils';
 
 export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   const onReadRef = useRef(onRead);
@@ -155,7 +156,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                     </Text>
                     {!isTrulyOnline && (
                       <Text dimColor color="gray">
-                        (Last seen: {lastSeenDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                        (Last seen: {formatLastSeen(friend.lastSeen)})
                       </Text>
                     )}
                   </Box>

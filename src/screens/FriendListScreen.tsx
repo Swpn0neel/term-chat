@@ -8,6 +8,7 @@ import { Spinner } from '../components/ui/feedback/Spinner';
 import { SocialService } from '../services/socialService';
 import { Heading } from '../components/ui/typography/Heading';
 import { Title } from '../components/ui/typography/Title';
+import { formatLastSeen } from '../lib/dateUtils';
 
 export default function FriendListScreen({ user, navigate, unreadCounts = {} }: any) {
   const theme = useTheme();
@@ -72,7 +73,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
                 const isTrulyOnline = f.isOnline && Math.abs(diffMs) < 45000;
                 
                 const count = unreadCounts[f.id] || 0;
-                const timeStr = lastSeenDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const lastSeenStr = formatLastSeen(f.lastSeen);
 
                 return {
                   label: `💬 ${f.username} ${count > 0 ? '●' : ''}`,
@@ -80,7 +81,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
                   hint: (
                     <Text>
                       <Text color={isTrulyOnline ? '#50fa7b' : 'gray'}>
-                        {isTrulyOnline ? '● Online' : `○ Offline (seen ${timeStr})`}
+                        {isTrulyOnline ? '● Online' : `○ Offline (last seen ${lastSeenStr})`}
                       </Text>
                       {count > 0 && <Text color="yellow"> ({count} new)</Text>}
                     </Text>
