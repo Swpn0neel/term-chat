@@ -8,6 +8,7 @@ import { MessageService } from '../services/messageService';
 import { SocialService } from '../services/socialService';
 import { prisma } from '../lib/prisma';
 import { shutdown } from '../lib/shutdown';
+import { Heading } from '../components/ui/typography/Heading';
 
 export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   const onReadRef = useRef(onRead);
@@ -139,8 +140,8 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="blue" gap={1}>
-          <Text bold>Chatting with: {friend?.username || '...'}</Text>
+        <Box paddingX={1} borderStyle="single" borderColor="blue" flexDirection="column">
+          <Heading level={1}>{friend?.username || '...'}</Heading>
           {friend && (
             <Box>
               <Text dimColor>[ </Text>

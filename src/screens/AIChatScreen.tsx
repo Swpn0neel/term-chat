@@ -5,6 +5,7 @@ import { AppShell } from '../components/ui/templates/AppShell';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { AIService, ChatMessage } from '../services/aiService';
 import { shutdown } from '../lib/shutdown';
+import { Heading } from '../components/ui/typography/Heading';
 
 export default function AIChatScreen({ user, navigate }: any) {
   const theme = useTheme();
@@ -94,8 +95,8 @@ export default function AIChatScreen({ user, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="yellow">
-          <Text bold>✨ TermChat AI Assistant</Text>
+        <Box paddingX={1} borderStyle="single" borderColor="yellow" flexDirection="column">
+          <Heading level={1}>AI Assistant</Heading>
         </Box>
       </AppShell.Header>
       <AppShell.Content>

@@ -6,6 +6,8 @@ import { TextInput } from '../components/ui/input/TextInput';
 import { Alert } from '../components/ui/feedback/Alert';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { SocialService } from '../services/socialService';
+import { Heading } from '../components/ui/typography/Heading';
+import { Title } from '../components/ui/typography/Title';
 
 export default function AddFriendScreen({ user, navigate }: any) {
   const theme = useTheme();
@@ -41,8 +43,11 @@ export default function AddFriendScreen({ user, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="green">
-          <Text bold>Add Friend</Text>
+        <Box flexDirection="column" paddingX={1}>
+          <Title>TermChat</Title>
+          <Box borderStyle="round" borderColor="green" paddingX={1} marginTop={1}>
+            <Text bold>Add Friend</Text>
+          </Box>
         </Box>
       </AppShell.Header>
       <AppShell.Content>

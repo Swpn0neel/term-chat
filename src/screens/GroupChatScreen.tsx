@@ -7,6 +7,7 @@ import { Spinner } from '../components/ui/feedback/Spinner';
 import { MessageService } from '../services/messageService';
 import { GroupService } from '../services/groupService';
 import { shutdown } from '../lib/shutdown';
+import { Heading } from '../components/ui/typography/Heading';
 
 export default function GroupChatScreen({ user, groupId, navigate }: any) {
   const theme = useTheme();
@@ -168,8 +169,8 @@ export default function GroupChatScreen({ user, groupId, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="blue" gap={1}>
-          <Text bold>Group: {group?.name || '...'}</Text>
+        <Box paddingX={1} borderStyle="single" borderColor="blue" flexDirection="column">
+          <Heading level={1}>{group?.name || '...'}</Heading>
           <Box>
             <Text dimColor>[ </Text>
             <Text color="#50fa7b">{onlineCount} online</Text>

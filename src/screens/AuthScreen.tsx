@@ -7,7 +7,8 @@ import { Spinner } from '../components/ui/feedback/Spinner';
 import { AuthService } from '../services/authService';
 import { SessionService } from '../services/sessionService';
 
-import { BigText } from '../components/ui/typography/BigText';
+import { Heading } from '../components/ui/typography/Heading';  
+import { Title } from '../components/ui/typography/Title';
 import { Screen } from '../App';
 
 interface AuthScreenProps {
@@ -98,25 +99,21 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
     }
 
     if (key.tab) {
-      setMode(m => {
-        const nextMode = m === 'signin' ? 'signup' : 'signin';
-        // If switching to signin and we were on confirmPassword, move to password
-        if (nextMode === 'signin' && activeField === 'confirmPassword') {
-          setActiveField('password');
-        }
-        return nextMode;
-      });
-      setError(null);
+      setMode(m => m === 'signin' ? 'signup' : 'signin');
     }
 
     if (key.return) {
       handleSubmit();
     }
+
+    if (key.escape) {
+      process.exit(0);
+    }
   });
 
   if (isLoading && !username) {
     return (
-      <Box padding={2} justifyContent="center" alignItems="center">
+      <Box padding={1}>
         <Spinner label="Checking session..." />
       </Box>
     );
@@ -124,69 +121,71 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
 
   return (
     <Box flexDirection="column" padding={1}>
-      <Box marginBottom={1} flexDirection="column">
-        <BigText>TermChat</BigText>
-        <Text color="gray" dimColor italic>  -- The Terminal Messaging Hub --</Text>
+      <Box marginBottom={2} flexDirection="column" gap={1}>
+        <Title>TermChat</Title>
+        <Heading level={2}>The Ultimate Terminal Messaging Hub</Heading>
       </Box>
 
-      <Box gap={2} marginBottom={1}>
-        <Text color={mode === 'signin' ? theme.colors.primary : undefined} bold={mode === 'signin'}>
-          {mode === 'signin' ? '●' : '○'} Sign In
-        </Text>
-        <Text color={mode === 'signup' ? theme.colors.primary : undefined} bold={mode === 'signup'}>
-          {mode === 'signup' ? '●' : '○'} Sign Up
-        </Text>
-      </Box>
-
-      <Box flexDirection="column" gap={1}>
-        <Box flexDirection="column">
-          <Text color={activeField === 'username' ? theme.colors.primary : undefined}>
-            Username:
+      <Box width="100%" flexDirection="column">
+        <Box gap={2} marginBottom={1}>
+          <Text color={mode === 'signin' ? theme.colors.primary : undefined} bold={mode === 'signin'}>
+            {mode === 'signin' ? '●' : '○'} Sign In
           </Text>
-          <TextInput 
-            value={username}
-            onChange={setUsername}
-            isFocused={activeField === 'username'}
-            autoFocus={activeField === 'username'}
-            bordered={activeField === 'username'}
-            placeholder="enter username..."
-            onSubmit={handleSubmit}
-          />
+          <Text color={mode === 'signup' ? theme.colors.primary : undefined} bold={mode === 'signup'}>
+            {mode === 'signup' ? '●' : '○'} Sign Up
+          </Text>
         </Box>
 
-        <Box flexDirection="column">
-          <Text color={activeField === 'password' ? theme.colors.primary : undefined}>
-            Password:
-          </Text>
-          <TextInput 
-            value={password}
-            onChange={setPassword}
-            mask="*"
-            isFocused={activeField === 'password'}
-            autoFocus={activeField === 'password'}
-            bordered={activeField === 'password'}
-            placeholder="••••••••"
-            onSubmit={handleSubmit}
-          />
-        </Box>
-
-        {mode === 'signup' && (
+        <Box flexDirection="column" gap={1} width="100%">
           <Box flexDirection="column">
-            <Text color={activeField === 'confirmPassword' ? theme.colors.primary : undefined}>
-              Confirm Password:
+            <Text color={activeField === 'username' ? theme.colors.primary : undefined}>
+              Username:
             </Text>
             <TextInput 
-              value={confirmPassword}
-              onChange={setConfirmPassword}
+              value={username}
+              onChange={setUsername}
+              isFocused={activeField === 'username'}
+              autoFocus={activeField === 'username'}
+              bordered={true}
+              placeholder="enter username..."
+              onSubmit={handleSubmit}
+            />
+          </Box>
+
+          <Box flexDirection="column">
+            <Text color={activeField === 'password' ? theme.colors.primary : undefined}>
+              Password:
+            </Text>
+            <TextInput 
+              value={password}
+              onChange={setPassword}
               mask="*"
-              isFocused={activeField === 'confirmPassword'}
-              autoFocus={activeField === 'confirmPassword'}
-              bordered={activeField === 'confirmPassword'}
+              isFocused={activeField === 'password'}
+              autoFocus={activeField === 'password'}
+              bordered={true}
               placeholder="••••••••"
               onSubmit={handleSubmit}
             />
           </Box>
-        )}
+
+          {mode === 'signup' && (
+            <Box flexDirection="column">
+              <Text color={activeField === 'confirmPassword' ? theme.colors.primary : undefined}>
+                Confirm Password:
+              </Text>
+              <TextInput 
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                mask="*"
+                isFocused={activeField === 'confirmPassword'}
+                autoFocus={activeField === 'confirmPassword'}
+                bordered={true}
+                placeholder="••••••••"
+                onSubmit={handleSubmit}
+              />
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {error && (

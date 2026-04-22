@@ -3,7 +3,8 @@ import { Box, Text } from 'ink';
 import { AppShell } from '../components/ui/templates/AppShell';
 import { Select } from '../components/ui/selection/Select';
 import { SessionService } from '../services/sessionService';
-import { BigText } from '../components/ui/typography/BigText';
+import { Heading } from '../components/ui/typography/Heading';
+import { Title } from '../components/ui/typography/Title';
 
 export default function DashboardScreen({ user, navigate, unreadCount = 0, pendingCount = 0, groupUnreadCount = 0 }: any) {
   const handleSelect = (val: string) => {
@@ -20,8 +21,8 @@ export default function DashboardScreen({ user, navigate, unreadCount = 0, pendi
     <AppShell>
       <AppShell.Header>
         <Box flexDirection="column" paddingX={1}>
-          <BigText>TermChat</BigText>
-          <Box borderStyle="round" borderColor="cyan" paddingX={1} marginTop={1}>
+          <Title>TermChat</Title>
+          <Box borderStyle="round" borderColor="green" paddingX={1} marginTop={1}>
             <Text bold>Logged in as: {user?.username ?? 'Guest'}</Text>
           </Box>
         </Box>

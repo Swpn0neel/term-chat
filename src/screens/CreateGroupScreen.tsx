@@ -5,6 +5,8 @@ import { Select } from '../components/ui/selection/Select';
 import { SocialService } from '../services/socialService';
 import { GroupService } from '../services/groupService';
 import { Spinner } from '../components/ui/feedback/Spinner';
+import { Heading } from '../components/ui/typography/Heading';
+import { Title } from '../components/ui/typography/Title';
 
 export default function CreateGroupScreen({ user, navigate }: any) {
   const [step, setStep] = useState(1);
@@ -77,8 +79,11 @@ export default function CreateGroupScreen({ user, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="green">
-          <Text bold>Create New Group</Text>
+        <Box flexDirection="column" paddingX={1}>
+          <Title>TermChat</Title>
+          <Box borderStyle="round" borderColor="green" paddingX={1} marginTop={1}>
+            <Text bold>Create New Group</Text>
+          </Box>
         </Box>
       </AppShell.Header>
       <AppShell.Content>

@@ -6,6 +6,8 @@ import { Select } from '../components/ui/selection/Select';
 import { Alert } from '../components/ui/feedback/Alert';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { SocialService } from '../services/socialService';
+import { Heading } from '../components/ui/typography/Heading';
+import { Title } from '../components/ui/typography/Title';
 
 export default function PendingRequestsScreen({ user, navigate, onUpdate }: any) {
   const theme = useTheme();
@@ -80,8 +82,11 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="yellow">
-          <Text bold>Pending Friend Requests</Text>
+        <Box flexDirection="column" paddingX={1}>
+          <Title>TermChat</Title>
+          <Box borderStyle="round" borderColor="green" paddingX={1} marginTop={1}>
+            <Text bold>Pending Requests</Text>
+          </Box>
         </Box>
       </AppShell.Header>
       <AppShell.Content>

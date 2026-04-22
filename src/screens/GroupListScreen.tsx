@@ -4,6 +4,8 @@ import { AppShell } from '../components/ui/templates/AppShell';
 import { Select } from '../components/ui/selection/Select';
 import { GroupService } from '../services/groupService';
 import { Spinner } from '../components/ui/feedback/Spinner';
+import { Heading } from '../components/ui/typography/Heading';
+import { Title } from '../components/ui/typography/Title';
 
 export default function GroupListScreen({ user, navigate }: any) {
   const [groups, setGroups] = useState<any[]>([]);
@@ -46,8 +48,11 @@ export default function GroupListScreen({ user, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="cyan">
-          <Text bold>Your Group Chats</Text>
+        <Box flexDirection="column" paddingX={1}>
+          <Title>TermChat</Title>
+          <Box borderStyle="round" borderColor="green" paddingX={1} marginTop={1}>
+            <Text bold>Group Chats</Text>
+          </Box>
         </Box>
       </AppShell.Header>
       <AppShell.Content>
