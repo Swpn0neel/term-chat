@@ -7,7 +7,7 @@ import { Spinner } from '../components/ui/feedback/Spinner';
 import { MessageService } from '../services/messageService';
 import { SocialService } from '../services/socialService';
 import { prisma } from '../lib/prisma';
-import { shutdown } from '../lib/shutdown';
+
 import { Heading } from '../components/ui/typography/Heading';
 import { formatLastSeen } from '../lib/dateUtils';
 
@@ -79,10 +79,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
     const userMessage = newMessage.trim();
     if (!userMessage || isSending) return;
 
-    if (userMessage.toLowerCase() === '/quit') {
-      await shutdown(user.id);
-      return;
-    }
+
 
     // Handle delete commands
     if (userMessage.toLowerCase().startsWith('/delete')) {
@@ -263,7 +260,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
         borderStyle="single"
         borderColor="blue"
       />
-      <AppShell.Hints items={['/quit: Quit', '/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
+      <AppShell.Hints items={['/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
     </AppShell>
   );
 }

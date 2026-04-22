@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Box, Text } from 'ink';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Box, Text, useStdout } from 'ink';
+import wrapAnsi from 'wrap-ansi';
 import { useInput, useTheme } from 'termui';
 import { AppShell } from '../components/ui/templates/AppShell';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { AIService, ChatMessage } from '../services/aiService';
-import { shutdown } from '../lib/shutdown';
+
 import { Heading } from '../components/ui/typography/Heading';
 
 export default function AIChatScreen({ user, navigate }: any) {
@@ -13,6 +14,9 @@ export default function AIChatScreen({ user, navigate }: any) {
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [scrollOffset, setScrollOffset] = useState(0);
+
+  const { stdout } = useStdout();
 
   // Load history from DB on mount
   useEffect(() => {
@@ -21,7 +25,6 @@ export default function AIChatScreen({ user, navigate }: any) {
         const dbHistory = await AIService.getHistory(user.id);
         setHistory(dbHistory);
       } catch (err) {
-        // Silent fail to protect UI
       } finally {
         setIsLoading(false);
       }
@@ -33,11 +36,7 @@ export default function AIChatScreen({ user, navigate }: any) {
     const userMessage = input.trim();
     if (!userMessage || isThinking) return;
 
-    // Handle slash commands
-    if (userMessage.toLowerCase() === '/quit') {
-      await shutdown(user.id);
-      return;
-    }
+
 
     if (userMessage.toLowerCase() === '/clear') {
       try {
@@ -49,8 +48,8 @@ export default function AIChatScreen({ user, navigate }: any) {
     }
 
     setInput('');
+    setScrollOffset(0);
 
-    // Update local history
     const newHistory: ChatMessage[] = [
       ...history,
       { role: 'user', parts: [{ text: userMessage }] }
@@ -59,12 +58,8 @@ export default function AIChatScreen({ user, navigate }: any) {
 
     setIsThinking(true);
     try {
-      // Save User Message to DB
       await AIService.saveMessage(user.id, userMessage, false);
-
       const response = await AIService.sendChatMessage(userMessage, history);
-      
-      // Save AI Message to DB
       await AIService.saveMessage(user.id, response, true);
 
       setHistory(h => [
@@ -73,10 +68,7 @@ export default function AIChatScreen({ user, navigate }: any) {
       ]);
     } catch (err: any) {
       const fallback = "sorry, an error occured from my side. try again later.";
-      
-      // Save Error Fallback to DB
       await AIService.saveMessage(user.id, fallback, true);
-
       setHistory(h => [
         ...h,
         { role: 'model', parts: [{ text: fallback }] }
@@ -87,7 +79,11 @@ export default function AIChatScreen({ user, navigate }: any) {
   };
 
   useInput((_input, key) => {
-    if (key.escape) {
+    if (key.upArrow) {
+      setScrollOffset(s => s + 1);
+    } else if (key.downArrow) {
+      setScrollOffset(s => Math.max(0, s - 1));
+    } else if (key.escape) {
       navigate('dashboard');
     }
   });
@@ -95,35 +91,78 @@ export default function AIChatScreen({ user, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="green" flexDirection="column">
+        <Box paddingX={1} borderStyle="single" borderColor="green" flexDirection="row">
           <Heading level={1}>AI Assistant</Heading>
         </Box>
       </AppShell.Header>
-      <AppShell.Content>
-        <Box flexDirection="column" paddingX={1} paddingY={1}>
-          {isLoading && history.length === 0 && (
+      <AppShell.Content height={stdout?.rows ? Math.max(10, stdout.rows - 7) : 20}>
+        {isLoading && history.length === 0 ? (
+          <Box padding={1}>
             <Spinner label="Loading conversation history..." />
-          )}
+          </Box>
+        ) : (
+          <Box flexDirection="column" paddingX={1} paddingY={1} width="100%" flexGrow={1}>
+            {(() => {
+              if (history.length === 0 && !isThinking) {
+                return <Text dimColor italic>Hello! I am your AI assistant. Ask me anything about the terminal, coding, or TermChat!</Text>;
+              }
 
-          {history.length === 0 && !isThinking && !isLoading && (
-            <Text dimColor italic>Hello! I am your AI assistant. Ask me anything about the terminal, coding, or TermChat!</Text>
-          )}
+              const width = stdout?.columns || 100;
+              const height = stdout?.rows || 24;
+              const chatHeight = Math.max(5, height - 12);
 
-          {history.map((turn, idx) => (
-            <Box key={idx} flexDirection="column" marginBottom={1}>
-              <Text color={turn.role === 'user' ? 'green' : 'cyan'} bold>
-                {turn.role === 'user' ? 'You:' : 'TermChat AI:'}
-              </Text>
-              <Text>{turn.parts[0].text}</Text>
-            </Box>
-          ))}
+              const allLines: React.ReactNode[] = [];
 
-          {isThinking && (
-            <Box marginTop={1} gap={1}>
-              <Spinner label="TermChat AI is thinking..." />
-            </Box>
-          )}
-        </Box>
+              history.forEach((turn, turnIdx) => {
+                const isUser = turn.role === 'user';
+                const prefix = isUser ? 'You: ' : 'TermChat AI: ';
+                const prefixLen = prefix.length;
+                const content = turn.parts[0].text;
+
+                const wrappedContent = wrapAnsi(content, Math.max(10, width - prefixLen - 6), { hard: true, trim: false });
+                const contentLines = wrappedContent.split('\n');
+
+                contentLines.forEach((lineText, idx) => {
+                  allLines.push(
+                    <Box key={`t${turnIdx}-l${idx}`} flexDirection="row">
+                      {idx === 0 ? (
+                        <Text color={isUser ? '#50fa7b' : 'cyan'} bold>
+                          {prefix}
+                        </Text>
+                      ) : (
+                        <Text>{' '.repeat(prefixLen)}</Text>
+                      )}
+                      <Text> {lineText}</Text>
+                    </Box>
+                  );
+                });
+
+                // Add a small gap between turns
+                if (turnIdx < history.length - 1 || isThinking) {
+                  allLines.push(<Box key={`gap-${turnIdx}`} height={1} />);
+                }
+              });
+
+              if (isThinking) {
+                allLines.push(
+                  <Box key="thinking" gap={1}>
+                    <Spinner label="TermChat AI is thinking..." />
+                  </Box>
+                );
+              }
+
+              const maxLines = Math.max(1, chatHeight);
+              const totalLines = allLines.length;
+              const maxOffset = Math.max(0, totalLines - maxLines);
+              const currentOffset = Math.min(scrollOffset, maxOffset);
+
+              const start = Math.max(0, totalLines - maxLines - currentOffset);
+              const end = totalLines - currentOffset;
+
+              return allLines.slice(start, end);
+            })()}
+          </Box>
+        )}
       </AppShell.Content>
       <AppShell.Input
         placeholder="Ask the AI something..."
@@ -133,7 +172,7 @@ export default function AIChatScreen({ user, navigate }: any) {
         borderStyle="single"
         borderColor="green"
       />
-      <AppShell.Hints items={['/quit: Close App', '/clear: Clear History', 'Enter: Ask', 'Esc: Back']} />
+      <AppShell.Hints items={['Enter: Ask', '↑↓: Scroll', 'Esc: Back', '/clear: Clear']} />
     </AppShell>
   );
 }

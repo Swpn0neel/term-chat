@@ -6,7 +6,7 @@ import { AppShell } from '../components/ui/templates/AppShell';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { MessageService } from '../services/messageService';
 import { GroupService } from '../services/groupService';
-import { shutdown } from '../lib/shutdown';
+
 import { Heading } from '../components/ui/typography/Heading';
 
 export default function GroupChatScreen({ user, groupId, navigate, onRead }: any) {
@@ -80,10 +80,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
     const userMessage = newMessage.trim();
     if (!userMessage || isSending) return;
 
-    if (userMessage.toLowerCase() === '/quit') {
-      await shutdown(user.id);
-      return;
-    }
+
 
     // Handle group commands
     if (userMessage.startsWith('/')) {
