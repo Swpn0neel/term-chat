@@ -22,7 +22,7 @@ export default function DashboardScreen({ user, navigate, unreadCount = 0 }) {
                                 value: 'friend-list',
                                 hint: unreadCount > 0 ? `${unreadCount} new` : undefined
                             },
-                            { label: '🤖 AI Chat', value: 'ai-chat' },
+                            { label: '🤖 Chat with AI', value: 'ai-chat' },
                             { label: '🚪 Sign Out', value: 'auth' }
                         ], onSubmit: handleSelect }) }) }), _jsx(AppShell.Hints, { items: ['q: Quit', '↑↓: Move', 'Enter: Select'] })] }));
 }

@@ -64,6 +64,18 @@ export class SocialService {
   }
 
   /**
+   * Fetch pending requests count for a user
+   */
+  static async getPendingCount(userId: string) {
+    return await prisma.friendRequest.count({
+      where: {
+        receiverId: userId,
+        status: Status.PENDING,
+      },
+    });
+  }
+
+  /**
    * Accept or Decline a request
    */
   static async respondToRequest(requestId: string, action: 'ACCEPT' | 'DECLINE') {

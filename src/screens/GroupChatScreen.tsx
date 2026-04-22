@@ -5,73 +5,73 @@ import { useInput, useTheme } from 'termui';
 import { AppShell } from '../components/ui/templates/AppShell';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { MessageService } from '../services/messageService';
-import { SocialService } from '../services/socialService';
-import { prisma } from '../lib/prisma';
+import { GroupService } from '../services/groupService';
 import { shutdown } from '../lib/shutdown';
 
-export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
-  const onReadRef = useRef(onRead);
-  onReadRef.current = onRead;
+export default function GroupChatScreen({ user, groupId, navigate }: any) {
   const theme = useTheme();
   const [messages, setMessages] = useState<any[]>([]);
-  const [friend, setFriend] = useState<any>(null);
+  const [group, setGroup] = useState<any>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [scrollOffset, setScrollOffset] = useState(0);
+  const [onlineCount, setOnlineCount] = useState(0);
   
   const { stdout } = useStdout();
-  const lastMessageCount = useRef(0);
 
-  const fetchFriendInfo = useCallback(async () => {
+  const fetchGroupInfo = useCallback(async () => {
     try {
-      const data = await prisma.user.findUnique({
-        where: { id: friendId },
-        select: { username: true, isOnline: true, lastSeen: true }
-      });
-      setFriend(data);
-    } catch (err) {}
-  }, [friendId]);
+      const data = await GroupService.getGroupDetails(groupId);
+      if (!data) {
+        navigate('group-list');
+        return;
+      }
+      setGroup(data);
+      
+      // Check if user is still a member
+      const isMember = data.members.some((m: any) => m.user.id === user.id);
+      if (!isMember) {
+        navigate('group-list');
+        return;
+      }
 
-  const markRead = useCallback(async () => {
-    try {
-      await SocialService.markAsRead(user.id, friendId);
-      onReadRef.current?.();
-    } catch (err) {}
-  }, [user.id, friendId]);
+      // Calculate online members
+      const count = data.members.filter((m: any) => {
+        const lastSeenDate = new Date(m.user.lastSeen);
+        const diffMs = Date.now() - lastSeenDate.getTime();
+        return m.user.isOnline && Math.abs(diffMs) < 45000;
+      }).length;
+      setOnlineCount(count);
+    } catch (err) {
+      navigate('group-list');
+    }
+  }, [groupId, navigate]);
 
   const fetchConversation = useCallback(async (isInitial = false) => {
     if (isInitial) setIsLoading(true);
     try {
-      const data = await MessageService.getConversation(user.id, friendId);
-      
-      // If we got new messages, mark them as read
-      if (data.length > lastMessageCount.current) {
-        markRead();
-      }
-      
-      lastMessageCount.current = data.length;
+      const data = await MessageService.getGroupConversation(groupId, user.id);
       setMessages(data);
     } catch (err) {
-      // Silent error handle
     } finally {
       if (isInitial) setIsLoading(false);
     }
-  }, [user.id, friendId, markRead]);
+  }, [groupId, user.id]);
 
   useEffect(() => {
-    fetchFriendInfo();
+    fetchGroupInfo();
     fetchConversation(true);
-    markRead(); 
+    GroupService.markAsRead(groupId, user.id);
 
-    // Setup Polling (3 seconds)
     const interval = setInterval(() => {
       fetchConversation();
-      fetchFriendInfo();
+      fetchGroupInfo();
+      GroupService.markAsRead(groupId, user.id);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [friendId, fetchFriendInfo, fetchConversation, markRead]);
+  }, [groupId, user.id, fetchGroupInfo, fetchConversation]);
 
   const handleSend = async () => {
     const userMessage = newMessage.trim();
@@ -82,43 +82,72 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
       return;
     }
 
-    // Handle delete commands
-    if (userMessage.toLowerCase().startsWith('/delete')) {
+    // Handle group commands
+    if (userMessage.startsWith('/')) {
       const parts = userMessage.split(' ');
-      const arg = parts[1]?.toLowerCase();
+      const cmd = parts[0].toLowerCase();
+      const arg = parts[1];
 
       try {
-        if (arg === 'all') {
-          await MessageService.deleteConversationMessages(user.id, friendId);
-        } else {
-          const n = arg ? parseInt(arg) : 1;
-          const myMessages = messages.filter(m => m.senderId === user.id);
-          
-          // Get the last N messages
-          const msgsToDelete = myMessages.slice(-n);
-          
-          if (msgsToDelete.length > 0) {
-            // Delete all of them
-            await Promise.all(
-              msgsToDelete.map(msg => MessageService.deleteMessage(msg.id, user.id))
-            );
-          }
+        if (cmd === '/add' && arg) {
+          if (group.creatorId !== user.id) throw new Error('Only creator can add members.');
+          await GroupService.addMember(groupId, arg, user.id);
+          setNewMessage('');
+          await fetchConversation();
+          return;
+        } 
+        if (cmd === '/remove' && arg) {
+          if (group.creatorId !== user.id) throw new Error('Only creator can remove members.');
+          await GroupService.removeMember(groupId, arg, user.id);
+          setNewMessage('');
+          await fetchConversation();
+          return;
         }
+        if (cmd === '/leave') {
+          await GroupService.leaveGroup(groupId, user.id);
+          navigate('group-list');
+          return;
+        }
+        if (cmd === '/delete') {
+          const subArg = parts[1]?.toLowerCase();
+          if (subArg === 'all') {
+            await MessageService.deleteGroupMessages(user.id, groupId);
+          } else {
+            const n = subArg ? parseInt(subArg) : 1;
+            const myMessages = messages.filter(m => m.senderId === user.id);
+            const msgsToDelete = myMessages.slice(-n);
+            if (msgsToDelete.length > 0) {
+              await Promise.all(msgsToDelete.map(msg => MessageService.deleteMessage(msg.id, user.id)));
+            }
+          }
+          setNewMessage('');
+          await fetchConversation();
+          return;
+        }
+      } catch (err: any) {
+        // Maybe show error in chat as a temporary system message
+        setMessages(prev => [...prev, {
+          id: 'error-' + Date.now(),
+          content: `Error: ${err.message}`,
+          type: 'SYSTEM',
+          createdAt: new Date(),
+          sender: { username: 'System' }
+        }]);
         setNewMessage('');
-        await fetchConversation();
-      } catch (err) {
-        // Silently fail or log for debug
+        return;
       }
-      return;
     }
 
     setIsSending(true);
-    setNewMessage(''); // Clear immediately for UX
-    setScrollOffset(0); // Scroll to bottom on send
+    setNewMessage('');
+    setScrollOffset(0);
 
     try {
-      await MessageService.sendMessage(user.id, friendId, userMessage);
-      await fetchConversation(); // Immediate refresh after send
+      await MessageService.sendGroupMessage(user.id, groupId, userMessage);
+      // Removed the immediate fetchConversation() to prevent flicker, 
+      // the polling or the local state update (if we had it) would handle it.
+      // Actually, keep it but ensure it doesn't trigger loading state.
+      await fetchConversation(); 
     } catch (err) {
       setNewMessage(userMessage);
     } finally {
@@ -132,7 +161,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
     } else if (key.downArrow) {
       setScrollOffset(s => Math.max(0, s - 1));
     } else if (key.escape) {
-      navigate('friend-list');
+      navigate('group-list');
     }
   });
 
@@ -140,37 +169,18 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
     <AppShell>
       <AppShell.Header>
         <Box paddingX={1} borderStyle="single" borderColor="blue" gap={1}>
-          <Text bold>Chatting with: {friend?.username || '...'}</Text>
-          {friend && (
-            <Box>
-              <Text dimColor>[ </Text>
-              {(() => {
-                const lastSeenDate = new Date(friend.lastSeen);
-                const diffMs = Date.now() - lastSeenDate.getTime();
-                const isTrulyOnline = friend.isOnline && Math.abs(diffMs) < 45000;
-                
-                return (
-                  <Box gap={1}>
-                    <Text color={isTrulyOnline ? '#50fa7b' : 'gray'}>
-                      {isTrulyOnline ? '● Online' : '○ Offline'}
-                    </Text>
-                    {!isTrulyOnline && (
-                      <Text dimColor color="gray">
-                        (Last seen: {lastSeenDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
-                      </Text>
-                    )}
-                  </Box>
-                );
-              })()}
-              <Text dimColor> ]</Text>
-            </Box>
-          )}
+          <Text bold>Group: {group?.name || '...'}</Text>
+          <Box>
+            <Text dimColor>[ </Text>
+            <Text color="#50fa7b">{onlineCount} online</Text>
+            <Text dimColor> ]</Text>
+          </Box>
         </Box>
       </AppShell.Header>
       <AppShell.Content height={stdout?.rows ? Math.max(10, stdout.rows - 7) : 20}>
         {isLoading && messages.length === 0 ? (
           <Box padding={1}>
-            <Spinner label="Loading conversation history..." />
+            <Spinner label="Loading conversation..." />
           </Box>
         ) : (
           <Box flexDirection="column" paddingX={1} paddingY={1} width="100%" flexGrow={1}>
@@ -181,29 +191,35 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
 
               const width = stdout?.columns || 100;
               const height = stdout?.rows || 24;
-              // Reserve space for header (3), footer border (1), input box (3), hints (1), paddingY (2)
               const chatHeight = Math.max(5, height - 12);
 
               let lastDate = '';
               const allLines: React.ReactNode[] = [];
 
               messages.forEach((msg) => {
-                const dateStr = new Date(msg.createdAt).toLocaleDateString([], { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                });
-                
+                const dateStr = new Date(msg.createdAt).toLocaleDateString();
                 if (dateStr !== lastDate) {
-                  // Add a gap line and then the date separator
-                  allLines.push(<Box key={`gap-${msg.id}`} height={1} flexShrink={0} />);
+                  allLines.push(<Box key={`gap-${msg.id}`} height={1} />);
                   allLines.push(
-                    <Box key={`date-${msg.id}`} width="100%" justifyContent="center" flexShrink={0}>
+                    <Box key={`date-${msg.id}`} width="100%" justifyContent="center">
                       <Text color="gray" dimColor>── {dateStr} ──</Text>
                     </Box>
                   );
                   lastDate = dateStr;
+                }
+
+                if (msg.type === 'SYSTEM') {
+                  const isJoin = msg.content.includes('added') || msg.content.includes('created');
+                  const isLeave = msg.content.includes('left') || msg.content.includes('removed');
+                  
+                  allLines.push(
+                    <Box key={msg.id} width="100%" justifyContent="center" paddingY={0}>
+                      <Text color={isJoin ? '#50fa7b' : isLeave ? '#ff5555' : 'gray'} italic>
+                        {msg.content}
+                      </Text>
+                    </Box>
+                  );
+                  return;
                 }
 
                 const isMe = msg.senderId === user.id;
@@ -211,14 +227,12 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                 const prefix = `[${time}] ${isMe ? 'You' : msg.sender.username}: `;
                 const prefixLen = prefix.length;
                 
-                // Wrap content based on available width
-                // 4 is for paddingX and border offsets
                 const wrappedContent = wrapAnsi(msg.content, Math.max(10, width - prefixLen - 6), { hard: true, trim: false });
                 const contentLines = wrappedContent.split('\n');
 
                 contentLines.forEach((lineText, idx) => {
                   allLines.push(
-                    <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
+                    <Box key={`${msg.id}-l${idx}`} flexDirection="row">
                       {idx === 0 ? (
                         <>
                           <Text dimColor color="gray">[{time}] </Text>
@@ -235,7 +249,6 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                 });
               });
 
-              // Slicing logic
               const maxLines = Math.max(1, chatHeight);
               const totalLines = allLines.length;
               const maxOffset = Math.max(0, totalLines - maxLines);
@@ -263,7 +276,14 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
         borderStyle="round"
         borderColor="blue"
       />
-      <AppShell.Hints items={['/quit: Quit', '/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
+      <AppShell.Hints items={[
+        'Enter: Send', 
+        '↑↓: Scroll', 
+        'Esc: Back',
+        '/delete [n|all]: Delete',
+        ...(group?.creatorId === user.id ? ['/add [user]', '/remove [user]'] : []),
+        '/leave'
+      ]} />
     </AppShell>
   );
 }

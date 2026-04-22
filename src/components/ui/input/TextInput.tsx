@@ -13,6 +13,8 @@ export interface TextInputProps {
   label?: string;
   autoFocus?: boolean;
   id?: string;
+  /** Manually control focus state. If provided, overrides internal focus logic. */
+  isFocused?: boolean;
   /** Show a border around the input. Default: true */
   bordered?: boolean;
   /** Border style. Default: 'round' */
@@ -41,6 +43,7 @@ export function TextInput({
   label,
   autoFocus = false,
   id,
+  isFocused: externalIsFocused,
   bordered = true,
   borderStyle = 'round',
   paddingX = 1,
@@ -49,7 +52,9 @@ export function TextInput({
   const [internalValue, setInternalValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const theme = useTheme();
-  const { isFocused } = useFocus({ autoFocus, id });
+  const { isFocused: internalIsFocused } = useFocus({ autoFocus, id });
+
+  const isFocused = externalIsFocused ?? internalIsFocused;
 
   const value = controlledValue ?? internalValue;
 

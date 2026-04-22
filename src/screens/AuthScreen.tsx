@@ -7,6 +7,7 @@ import { Spinner } from '../components/ui/feedback/Spinner';
 import { AuthService } from '../services/authService';
 import { SessionService } from '../services/sessionService';
 
+import { BigText } from '../components/ui/typography/BigText';
 import { Screen } from '../App';
 
 interface AuthScreenProps {
@@ -19,14 +20,11 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [activeField, setActiveField] = useState<'username' | 'password'>('username');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [activeField, setActiveField] = useState<'username' | 'password' | 'confirmPassword'>('username');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true); // Start as loading for session check
 
-  // ASCII Logo (Double Line Style)
-  const LOGO = `
-Welcome to Term Chat ❤️                                            
-  `;
 
   // Auto-login check on mount
   useEffect(() => {
@@ -50,8 +48,13 @@ Welcome to Term Chat ❤️
   }, []);
 
   const handleSubmit = async () => {
-    if (!username || !password) {
+    if (!username || !password || (mode === 'signup' && !confirmPassword)) {
       setError('Please fill in all fields.');
+      return;
+    }
+
+    if (mode === 'signup' && password !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
 
@@ -78,16 +81,35 @@ Welcome to Term Chat ❤️
   useInput((input, key) => {
     if (isLoading) return;
 
-    if (key.upArrow || key.downArrow) {
-      setActiveField(f => f === 'username' ? 'password' : 'username');
+    if (key.upArrow) {
+      setActiveField(f => {
+        if (f === 'username') return mode === 'signup' ? 'confirmPassword' : 'password';
+        if (f === 'password') return 'username';
+        return 'password';
+      });
+    }
+
+    if (key.downArrow) {
+      setActiveField(f => {
+        if (f === 'username') return 'password';
+        if (f === 'password') return mode === 'signup' ? 'confirmPassword' : 'username';
+        return 'username';
+      });
     }
 
     if (key.tab) {
-      setMode(m => m === 'signin' ? 'signup' : 'signin');
+      setMode(m => {
+        const nextMode = m === 'signin' ? 'signup' : 'signin';
+        // If switching to signin and we were on confirmPassword, move to password
+        if (nextMode === 'signin' && activeField === 'confirmPassword') {
+          setActiveField('password');
+        }
+        return nextMode;
+      });
       setError(null);
     }
 
-    if (key.return && activeField === 'password') {
+    if (key.return) {
       handleSubmit();
     }
   });
@@ -103,8 +125,8 @@ Welcome to Term Chat ❤️
   return (
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={1} flexDirection="column">
-        <Text color="cyan" bold>{LOGO}</Text>
-        <Text color="gray" dimColor italic>     -- The Terminal Messaging Hub --</Text>
+        <BigText>TermChat</BigText>
+        <Text color="gray" dimColor italic>  -- The Terminal Messaging Hub --</Text>
       </Box>
 
       <Box gap={2} marginBottom={1}>
@@ -122,12 +144,13 @@ Welcome to Term Chat ❤️
             Username:
           </Text>
           <TextInput 
-            id="username"
             value={username}
             onChange={setUsername}
+            isFocused={activeField === 'username'}
             autoFocus={activeField === 'username'}
             bordered={activeField === 'username'}
             placeholder="enter username..."
+            onSubmit={handleSubmit}
           />
         </Box>
 
@@ -136,16 +159,34 @@ Welcome to Term Chat ❤️
             Password:
           </Text>
           <TextInput 
-            id="password"
             value={password}
             onChange={setPassword}
             mask="*"
+            isFocused={activeField === 'password'}
             autoFocus={activeField === 'password'}
             bordered={activeField === 'password'}
             placeholder="••••••••"
             onSubmit={handleSubmit}
           />
         </Box>
+
+        {mode === 'signup' && (
+          <Box flexDirection="column">
+            <Text color={activeField === 'confirmPassword' ? theme.colors.primary : undefined}>
+              Confirm Password:
+            </Text>
+            <TextInput 
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              mask="*"
+              isFocused={activeField === 'confirmPassword'}
+              autoFocus={activeField === 'confirmPassword'}
+              bordered={activeField === 'confirmPassword'}
+              placeholder="••••••••"
+              onSubmit={handleSubmit}
+            />
+          </Box>
+        )}
       </Box>
 
       {error && (
@@ -168,3 +209,4 @@ Welcome to Term Chat ❤️
     </Box>
   );
 }
+

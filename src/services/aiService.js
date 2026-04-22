@@ -62,7 +62,7 @@ export class AIService {
         await prisma.message.create({
             data: {
                 senderId: userId,
-                receiverId: userId, // Self-referential for AI chat
+                receiverId: userId, // Self-referential for Chat with AI
                 content: content.trim(),
                 isAIChat: true,
                 isAIResponse

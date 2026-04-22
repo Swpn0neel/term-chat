@@ -27,8 +27,8 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
   useEffect(() => {
     fetchFriends();
     
-    // Polling friends status every 10 seconds
-    const interval = setInterval(fetchFriends, 10000);
+    // Polling friends status every 5 seconds
+    const interval = setInterval(fetchFriends, 5000);
     return () => clearInterval(interval);
   }, [user.id]);
 
@@ -62,12 +62,12 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
             <Select 
               label="Select a friend to start chatting:"
               options={friends.map(f => {
-                // Calculation: Is online if flag is true AND seen recently (< 30s)
                 const lastSeenDate = new Date(f.lastSeen);
-                const diffSeconds = (Date.now() - lastSeenDate.getTime()) / 1000;
-                const isTrulyOnline = f.isOnline && diffSeconds < 30;
+                const diffMs = Date.now() - lastSeenDate.getTime();
+                const isTrulyOnline = f.isOnline && Math.abs(diffMs) < 45000;
                 
                 const count = unreadCounts[f.id] || 0;
+                const timeStr = lastSeenDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                 return {
                   label: `💬 ${f.username} ${count > 0 ? '●' : ''}`,
@@ -75,7 +75,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
                   hint: (
                     <Text>
                       <Text color={isTrulyOnline ? '#50fa7b' : 'gray'}>
-                        {isTrulyOnline ? '● Online' : '○ Offline'}
+                        {isTrulyOnline ? '● Online' : `○ Offline (seen ${timeStr})`}
                       </Text>
                       {count > 0 && <Text color="yellow"> ({count} new)</Text>}
                     </Text>

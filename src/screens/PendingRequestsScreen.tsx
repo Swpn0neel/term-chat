@@ -7,27 +7,30 @@ import { Alert } from '../components/ui/feedback/Alert';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { SocialService } from '../services/socialService';
 
-export default function PendingRequestsScreen({ user, navigate }: any) {
+export default function PendingRequestsScreen({ user, navigate, onUpdate }: any) {
   const theme = useTheme();
   const [requests, setRequests] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const fetchRequests = async () => {
-    setIsLoading(true);
+  const fetchRequests = async (isInitial = false) => {
+    if (isInitial) setIsLoading(true);
     try {
       const data = await SocialService.getPendingRequests(user.id);
       setRequests(data);
+      if (onUpdate) onUpdate(data.length);
     } catch (err: any) {
-      setError('Failed to load requests.');
+      if (isInitial) setError('Failed to load requests.');
     } finally {
-      setIsLoading(false);
+      if (isInitial) setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRequests();
+    fetchRequests(true);
+    const interval = setInterval(() => fetchRequests(false), 5000);
+    return () => clearInterval(interval);
   }, [user.id]);
 
   const handleAction = async (action: 'ACCEPT' | 'DECLINE') => {
@@ -38,7 +41,10 @@ export default function PendingRequestsScreen({ user, navigate }: any) {
     try {
       await SocialService.respondToRequest(request.id, action);
       // Remove from local list
-      setRequests(reqs => reqs.filter(r => r.id !== request.id));
+      const nextRequests = requests.filter(r => r.id !== request.id);
+      setRequests(nextRequests);
+      if (onUpdate) onUpdate(nextRequests.length);
+      
       if (selectedIndex >= requests.length - 1 && selectedIndex > 0) {
         setSelectedIndex(selectedIndex - 1);
       }

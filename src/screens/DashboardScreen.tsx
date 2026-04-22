@@ -3,8 +3,9 @@ import { Box, Text } from 'ink';
 import { AppShell } from '../components/ui/templates/AppShell';
 import { Select } from '../components/ui/selection/Select';
 import { SessionService } from '../services/sessionService';
+import { BigText } from '../components/ui/typography/BigText';
 
-export default function DashboardScreen({ user, navigate, unreadCount = 0 }: any) {
+export default function DashboardScreen({ user, navigate, unreadCount = 0, pendingCount = 0, groupUnreadCount = 0 }: any) {
   const handleSelect = (val: string) => {
     if (val === 'auth') {
       // Deliberate Sign Out
@@ -18,8 +19,11 @@ export default function DashboardScreen({ user, navigate, unreadCount = 0 }: any
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="cyan">
-          <Text bold>TermChat | Logged in as: {user?.username ?? 'Guest'}</Text>
+        <Box flexDirection="column" paddingX={1}>
+          <BigText>TermChat</BigText>
+          <Box borderStyle="round" borderColor="cyan" paddingX={1} marginTop={1}>
+            <Text bold>Logged in as: {user?.username ?? 'Guest'}</Text>
+          </Box>
         </Box>
       </AppShell.Header>
       <AppShell.Content>
@@ -28,13 +32,22 @@ export default function DashboardScreen({ user, navigate, unreadCount = 0 }: any
             label="Main Menu"
             options={[
               { label: '👤 Add Friend', value: 'add-friend' },
-              { label: '🔔 Pending Requests', value: 'pending' },
+              { 
+                label: `🔔 Pending Requests ${pendingCount > 0 ? '●' : ''}`, 
+                value: 'pending',
+                hint: pendingCount > 0 ? `${pendingCount} new` : undefined
+              },
               { 
                 label: `💬 Chat with Friends ${unreadCount > 0 ? '●' : ''}`, 
                 value: 'friend-list',
                 hint: unreadCount > 0 ? `${unreadCount} new` : undefined
               },
-              { label: '🤖 AI Chat', value: 'ai-chat' },
+              { 
+                label: `👥 Group Chats ${groupUnreadCount > 0 ? '●' : ''}`, 
+                value: 'group-list',
+                hint: groupUnreadCount > 0 ? `${groupUnreadCount} new` : undefined
+              },
+              { label: '🤖 Chat with AI', value: 'ai-chat' },
               { label: '🚪 Sign Out', value: 'auth' }
             ]}
             onSubmit={handleSelect}

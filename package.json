@@ -1,12 +1,12 @@
 {
   "name": "termchat-cli",
-  "version": "1.0.4",
+  "version": "1.2.0",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "termchat": "./dist/index.js"
+    "termchat": "dist/index.js"
   },
   "files": [
     "dist"
