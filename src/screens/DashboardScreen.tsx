@@ -41,7 +41,7 @@ export default function DashboardScreen({ user, navigate, unreadCount = 0 }: any
           />
         </Box>
       </AppShell.Content>
-      <AppShell.Hints items={['q: Quit', '↑↓: Move', 'Enter: Select']} />
+      <AppShell.Hints items={['Esc: Quit', '↑↓: Move', 'Enter: Select']} />
     </AppShell>
   );
 }

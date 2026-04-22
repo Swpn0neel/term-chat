@@ -40,4 +40,28 @@ export class MessageService {
       },
     });
   }
+
+  /**
+   * Delete a message by its ID, ensuring the sender is the one deleting it
+   */
+  static async deleteMessage(messageId: string, senderId: string) {
+    return await prisma.message.deleteMany({
+      where: {
+        id: messageId,
+        senderId,
+      },
+    });
+  }
+
+  /**
+   * Delete all messages sent by a user in a specific conversation
+   */
+  static async deleteConversationMessages(senderId: string, receiverId: string) {
+    return await prisma.message.deleteMany({
+      where: {
+        senderId,
+        receiverId,
+      },
+    });
+  }
 }

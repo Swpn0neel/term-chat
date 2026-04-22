@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useFocus, useTheme } from 'termui';
 

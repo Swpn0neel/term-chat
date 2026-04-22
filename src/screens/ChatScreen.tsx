@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useStdout } from 'ink';
+import wrapAnsi from 'wrap-ansi';
 import { useInput, useTheme } from 'termui';
 import { AppShell } from '../components/ui/templates/AppShell';
 import { Spinner } from '../components/ui/feedback/Spinner';
@@ -17,7 +18,9 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [scrollOffset, setScrollOffset] = useState(0);
   
+  const { stdout } = useStdout();
   const lastMessageCount = useRef(0);
 
   const fetchFriendInfo = useCallback(async () => {
@@ -79,8 +82,39 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
       return;
     }
 
+    // Handle delete commands
+    if (userMessage.toLowerCase().startsWith('/delete')) {
+      const parts = userMessage.split(' ');
+      const arg = parts[1]?.toLowerCase();
+
+      try {
+        if (arg === 'all') {
+          await MessageService.deleteConversationMessages(user.id, friendId);
+        } else {
+          const n = arg ? parseInt(arg) : 1;
+          const myMessages = messages.filter(m => m.senderId === user.id);
+          
+          // Get the last N messages
+          const msgsToDelete = myMessages.slice(-n);
+          
+          if (msgsToDelete.length > 0) {
+            // Delete all of them
+            await Promise.all(
+              msgsToDelete.map(msg => MessageService.deleteMessage(msg.id, user.id))
+            );
+          }
+        }
+        setNewMessage('');
+        await fetchConversation();
+      } catch (err) {
+        // Silently fail or log for debug
+      }
+      return;
+    }
+
     setIsSending(true);
     setNewMessage(''); // Clear immediately for UX
+    setScrollOffset(0); // Scroll to bottom on send
 
     try {
       await MessageService.sendMessage(user.id, friendId, userMessage);
@@ -93,7 +127,11 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   };
 
   useInput((_input, key) => {
-    if (key.escape) {
+    if (key.upArrow) {
+      setScrollOffset(s => s + 1);
+    } else if (key.downArrow) {
+      setScrollOffset(s => Math.max(0, s - 1));
+    } else if (key.escape) {
       navigate('friend-list');
     }
   });
@@ -122,31 +160,86 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           )}
         </Box>
       </AppShell.Header>
-      <AppShell.Content>
+      <AppShell.Content height={stdout?.rows ? Math.max(10, stdout.rows - 7) : 20}>
         {isLoading ? (
           <Box padding={1}>
             <Spinner label="Loading conversation history..." />
           </Box>
         ) : (
-          <Box flexDirection="column" paddingX={1} paddingY={1}>
-            {messages.length === 0 ? (
-              <Text dimColor italic>No messages yet. Say hi!</Text>
-            ) : (
-              messages.map((msg) => {
+          <Box flexDirection="column" paddingX={1} paddingY={1} width="100%" flexGrow={1}>
+            {(() => {
+              if (messages.length === 0) {
+                return <Text dimColor italic>No messages yet. Say hi!</Text>;
+              }
+
+              const width = stdout?.columns || 100;
+              const height = stdout?.rows || 24;
+              // Reserve space for header (3), footer border (1), input box (3), hints (1), paddingY (2)
+              const chatHeight = Math.max(5, height - 12);
+
+              let lastDate = '';
+              const allLines: React.ReactNode[] = [];
+
+              messages.forEach((msg) => {
+                const dateStr = new Date(msg.createdAt).toLocaleDateString([], { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                });
+                
+                if (dateStr !== lastDate) {
+                  // Add a gap line and then the date separator
+                  allLines.push(<Box key={`gap-${msg.id}`} height={1} flexShrink={0} />);
+                  allLines.push(
+                    <Box key={`date-${msg.id}`} width="100%" justifyContent="center" flexShrink={0}>
+                      <Text color="gray" dimColor>── {dateStr} ──</Text>
+                    </Box>
+                  );
+                  lastDate = dateStr;
+                }
+
                 const isMe = msg.senderId === user.id;
                 const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const prefix = `[${time}] ${isMe ? 'You' : msg.sender.username}: `;
+                const prefixLen = prefix.length;
                 
-                return (
-                  <Box key={msg.id} gap={1}>
-                    <Text dimColor color="gray">[{time}]</Text>
-                    <Text color={isMe ? '#50fa7b' : 'blue'} bold>
-                      {isMe ? 'You' : msg.sender.username}:
-                    </Text>
-                    <Text>{msg.content}</Text>
-                  </Box>
-                );
-              })
-            )}
+                // Wrap content based on available width
+                // 4 is for paddingX and border offsets
+                const wrappedContent = wrapAnsi(msg.content, Math.max(10, width - prefixLen - 6), { hard: true, trim: false });
+                const contentLines = wrappedContent.split('\n');
+
+                contentLines.forEach((lineText, idx) => {
+                  allLines.push(
+                    <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
+                      {idx === 0 ? (
+                        <>
+                          <Text dimColor color="gray">[{time}] </Text>
+                          <Text color={isMe ? '#50fa7b' : 'blue'} bold>
+                            {isMe ? 'You' : msg.sender.username}:
+                          </Text>
+                        </>
+                      ) : (
+                        <Text>{' '.repeat(prefixLen)}</Text>
+                      )}
+                      <Text> {lineText}</Text>
+                    </Box>
+                  );
+                });
+              });
+
+              // Slicing logic
+              const maxLines = Math.max(1, chatHeight);
+              const totalLines = allLines.length;
+              const maxOffset = Math.max(0, totalLines - maxLines);
+              const currentOffset = Math.min(scrollOffset, maxOffset);
+
+              const start = Math.max(0, totalLines - maxLines - currentOffset);
+              const end = totalLines - currentOffset;
+
+              return allLines.slice(start, end);
+            })()}
+
             {isSending && (
               <Box marginTop={1}>
                 <Text dimColor italic>Sending...</Text>
@@ -163,7 +256,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
         borderStyle="round"
         borderColor="blue"
       />
-      <AppShell.Hints items={['/quit: Close App', 'Enter: Send', 'Esc: Back']} />
+      <AppShell.Hints items={['/quit: Quit', '/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
     </AppShell>
   );
 }

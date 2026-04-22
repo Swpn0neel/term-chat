@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Text } from 'ink';
 import { useTheme } from 'termui';
 import type { ReactNode } from 'react';

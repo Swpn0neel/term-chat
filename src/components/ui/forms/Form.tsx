@@ -1,4 +1,4 @@
-import React, { useState, useCallback, createContext, useContext } from 'react';
+import { useState, useCallback, createContext, useContext } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useTheme } from 'termui';
 import type { ReactNode } from 'react';

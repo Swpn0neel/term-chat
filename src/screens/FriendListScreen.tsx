@@ -93,7 +93,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
           </Box>
         )}
       </AppShell.Content>
-      <AppShell.Hints items={['↑↓: Move', 'Enter: Chat', 'Esc: Back', 'q: Quit']} />
+      <AppShell.Hints items={['↑↓: Move', 'Enter: Chat', 'Esc: Back']} />
     </AppShell>
   );
 }

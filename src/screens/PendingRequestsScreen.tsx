@@ -115,7 +115,7 @@ export default function PendingRequestsScreen({ user, navigate }: any) {
           </Box>
         )}
       </AppShell.Content>
-      <AppShell.Hints items={['a: Accept', 'd: Decline', 'Esc: Back', 'q: Quit']} />
+      <AppShell.Hints items={['a: Accept', 'd: Decline', 'Esc: Back']} />
     </AppShell>
   );
 }

@@ -79,7 +79,7 @@ export default function AddFriendScreen({ user, navigate }: any) {
           )}
         </Box>
       </AppShell.Content>
-      <AppShell.Hints items={['Esc: Back', 'Enter: Send Request', 'q: Quit']} />
+      <AppShell.Hints items={['Esc: Back', 'Enter: Send Request']} />
     </AppShell>
   );
 }

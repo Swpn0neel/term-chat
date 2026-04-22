@@ -1,4 +1,4 @@
-import React, { type ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useTheme } from 'termui';
 

@@ -53,12 +53,13 @@ export default function App() {
     return () => clearInterval(interval);
   }, [sessionUser]);
 
-  useInput((input, key) => {
-    if (input === 'q' && screen !== 'chat' && screen !== 'ai-chat') {
-       shutdown(sessionUser?.id || null);
-    }
-    if (key.escape && screen !== 'auth' && screen !== 'dashboard') {
-      setScreen('dashboard');
+  useInput((_input, key) => {
+    if (key.escape) {
+      if (screen === 'auth' || screen === 'dashboard') {
+        shutdown(sessionUser?.id || null);
+      } else {
+        setScreen('dashboard');
+      }
     }
   });
 

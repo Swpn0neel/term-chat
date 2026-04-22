@@ -162,7 +162,7 @@ Welcome to Term Chat ❤️
 
       <Box marginTop={1} flexDirection="column">
         <Text color={theme.colors.mutedForeground} dimColor>
-          [↑/↓] Switch Field | [Tab] Toggle Mode | [Enter] Submit | [q] Quit
+          [↑/↓] Switch Field | [Tab] Toggle Mode | [Enter] Submit | [Esc] Quit
         </Text>
       </Box>
     </Box>
