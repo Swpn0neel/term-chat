@@ -140,8 +140,8 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="blue" flexDirection="column">
-          <Heading level={1}>{friend?.username || '...'}</Heading>
+        <Box paddingX={1} borderStyle="single" borderColor="blue" gap={1}>
+          <Text bold color="blue">{friend?.username || '...'}</Text>
           {friend && (
             <Box>
               <Text dimColor>[ </Text>
@@ -261,7 +261,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
         value={newMessage}
         onChange={setNewMessage}
         onSubmit={handleSend}
-        borderStyle="round"
+        borderStyle="single"
         borderColor="blue"
       />
       <AppShell.Hints items={['/quit: Quit', '/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />

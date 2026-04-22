@@ -95,7 +95,7 @@ export default function AIChatScreen({ user, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="yellow" flexDirection="column">
+        <Box paddingX={1} borderStyle="single" borderColor="green" flexDirection="column">
           <Heading level={1}>AI Assistant</Heading>
         </Box>
       </AppShell.Header>
@@ -130,8 +130,8 @@ export default function AIChatScreen({ user, navigate }: any) {
         value={input}
         onChange={setInput}
         onSubmit={handleSubmit}
-        borderStyle="round"
-        borderColor="yellow"
+        borderStyle="single"
+        borderColor="green"
       />
       <AppShell.Hints items={['/quit: Close App', '/clear: Clear History', 'Enter: Ask', 'Esc: Back']} />
     </AppShell>

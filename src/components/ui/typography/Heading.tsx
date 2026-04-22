@@ -25,7 +25,7 @@ export function Heading({
   prefix1 = '██ ',
   prefix2 = '▌ ',
   prefix3 = '› ',
-  uppercase = true,
+  uppercase = false,
 }: HeadingProps) {
   const theme = useTheme();
   const resolvedColor = color ?? theme.colors.primary;

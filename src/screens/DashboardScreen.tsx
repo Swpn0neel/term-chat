@@ -22,7 +22,7 @@ export default function DashboardScreen({ user, navigate, unreadCount = 0, pendi
       <AppShell.Header>
         <Box flexDirection="column" paddingX={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="round" borderColor="green" paddingX={1} marginTop={1}>
+          <Box borderStyle="single" borderColor="green" paddingX={1} marginTop={1}>
             <Text bold>Logged in as: {user?.username ?? 'Guest'}</Text>
           </Box>
         </Box>

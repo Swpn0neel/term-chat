@@ -169,7 +169,7 @@ export default function GroupChatScreen({ user, groupId, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="blue" flexDirection="column">
+        <Box paddingX={1} borderStyle="single" borderColor="blue" gap={1}>
           <Heading level={1}>{group?.name || '...'}</Heading>
           <Box>
             <Text dimColor>[ </Text>
@@ -274,7 +274,7 @@ export default function GroupChatScreen({ user, groupId, navigate }: any) {
         value={newMessage}
         onChange={setNewMessage}
         onSubmit={handleSend}
-        borderStyle="round"
+        borderStyle="single"
         borderColor="blue"
       />
       <AppShell.Hints items={[
