@@ -7,7 +7,7 @@ import { Spinner } from '../components/ui/feedback/Spinner';
 import { Heading } from '../components/ui/typography/Heading';
 import { Title } from '../components/ui/typography/Title';
 
-export default function GroupListScreen({ user, navigate }: any) {
+export default function GroupListScreen({ user, navigate, unreadCounts = {} }: any) {
   const [groups, setGroups] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,17 +38,20 @@ export default function GroupListScreen({ user, navigate }: any) {
 
   const options = [
     { label: '➕ Create New Group', value: 'create-new' },
-    ...groups.map(g => ({
-      label: `👥 ${g.name}`,
-      value: g.id,
-      hint: `${g.members.length} members`
-    }))
+    ...groups.map(g => {
+      const unreadCount = unreadCounts[g.id] || 0;
+      return {
+        label: `👥 ${g.name} ${unreadCount > 0 ? '●' : ''}`,
+        value: g.id,
+        hint: `${unreadCount > 0 ? `${unreadCount} new | ` : ''}${g.members.length} members`
+      };
+    })
   ];
 
   return (
     <AppShell>
       <AppShell.Header>
-        <Box flexDirection="column" paddingX={1}>
+        <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
           <Box borderStyle="single" borderColor="green" paddingX={1} marginTop={1}>
             <Text bold>Group Chats</Text>

@@ -29,6 +29,7 @@ export default function App() {
   const [sessionUser, setSessionUser] = useState<{ id: string; username: string } | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [pendingCount, setPendingCount] = useState(0);
+  const [groupUnreadCounts, setGroupUnreadCounts] = useState<Record<string, number>>({});
   const [groupUnreadCount, setGroupUnreadCount] = useState(0);
 
   const navigate: NavigateFn = (s, p = {}) => {
@@ -50,10 +51,12 @@ export default function App() {
         await AuthService.updateHeartbeat(sessionUser.id);
         const counts = await SocialService.getUnreadCounts(sessionUser.id);
         const pending = await SocialService.getPendingCount(sessionUser.id);
-        const groupUnread = await GroupService.getUnreadCount(sessionUser.id);
+        const gCounts = await GroupService.getUnreadCounts(sessionUser.id);
+        const totalGUnread = Object.values(gCounts).reduce((a, b) => a + b, 0);
         setUnreadCounts(counts);
         setPendingCount(pending);
-        setGroupUnreadCount(groupUnread);
+        setGroupUnreadCounts(gCounts);
+        setGroupUnreadCount(totalGUnread);
       } catch (err) {}
     };
 
@@ -103,9 +106,19 @@ export default function App() {
         }
       }} />}
       {screen === 'ai-chat'     && <AIChatScreen user={sessionUser!} navigate={navigate} />}
-      {screen === 'group-list'  && <GroupListScreen user={sessionUser!} navigate={navigate} />}
+      {screen === 'group-list'  && <GroupListScreen user={sessionUser!} navigate={navigate} unreadCounts={groupUnreadCounts} />}
       {screen === 'create-group' && <CreateGroupScreen user={sessionUser!} navigate={navigate} />}
-      {screen === 'group-chat'  && <GroupChatScreen user={sessionUser!} groupId={params.groupId} navigate={navigate} />}
+      {screen === 'group-chat'  && <GroupChatScreen user={sessionUser!} groupId={params.groupId} navigate={navigate} onRead={() => {
+        if (params.groupId && groupUnreadCounts[params.groupId]) {
+          const countToClear = groupUnreadCounts[params.groupId];
+          setGroupUnreadCounts(prev => {
+            const next = { ...prev };
+            delete next[params.groupId];
+            return next;
+          });
+          setGroupUnreadCount(prev => Math.max(0, prev - countToClear));
+        }
+      }} />}
     </ThemeProvider>
   );
 }

@@ -123,7 +123,7 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={2} flexDirection="column" gap={1}>
         <Title>TermChat</Title>
-        <Heading level={2}>The Ultimate Terminal Messaging Hub</Heading>
+        <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
       </Box>
 
       <Box width="100%" flexDirection="column">

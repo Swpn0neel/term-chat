@@ -79,7 +79,7 @@ export default function CreateGroupScreen({ user, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box flexDirection="column" paddingX={1}>
+        <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
           <Box borderStyle="single" borderColor="green" paddingX={1} marginTop={1}>
             <Text bold>Create New Group</Text>

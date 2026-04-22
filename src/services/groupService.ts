@@ -206,4 +206,29 @@ export class GroupService {
     }
     return groupsWithUnread;
   }
+
+  /**
+   * Get breakdown of unread messages per group for a user
+   */
+  static async getUnreadCounts(userId: string): Promise<Record<string, number>> {
+    const memberships = await prisma.groupMember.findMany({
+      where: { userId },
+      select: { groupId: true, lastReadAt: true }
+    });
+
+    const counts: Record<string, number> = {};
+    for (const membership of memberships) {
+      const count = await prisma.message.count({
+        where: {
+          groupId: membership.groupId,
+          createdAt: { gt: membership.lastReadAt },
+          senderId: { not: userId }
+        }
+      });
+      if (count > 0) {
+        counts[membership.groupId] = count;
+      }
+    }
+    return counts;
+  }
 }

@@ -9,7 +9,7 @@ import { GroupService } from '../services/groupService';
 import { shutdown } from '../lib/shutdown';
 import { Heading } from '../components/ui/typography/Heading';
 
-export default function GroupChatScreen({ user, groupId, navigate }: any) {
+export default function GroupChatScreen({ user, groupId, navigate, onRead }: any) {
   const theme = useTheme();
   const [messages, setMessages] = useState<any[]>([]);
   const [group, setGroup] = useState<any>(null);
@@ -64,11 +64,13 @@ export default function GroupChatScreen({ user, groupId, navigate }: any) {
     fetchGroupInfo();
     fetchConversation(true);
     GroupService.markAsRead(groupId, user.id);
+    if (onRead) onRead();
 
     const interval = setInterval(() => {
       fetchConversation();
       fetchGroupInfo();
       GroupService.markAsRead(groupId, user.id);
+      if (onRead) onRead();
     }, 3000);
 
     return () => clearInterval(interval);
@@ -116,9 +118,13 @@ export default function GroupChatScreen({ user, groupId, navigate }: any) {
           } else {
             const n = subArg ? parseInt(subArg) : 1;
             const myMessages = messages.filter(m => m.senderId === user.id);
-            const msgsToDelete = myMessages.slice(-n);
-            if (msgsToDelete.length > 0) {
-              await Promise.all(msgsToDelete.map(msg => MessageService.deleteMessage(msg.id, user.id)));
+            
+            // Get the Nth last message
+            const targetIndex = myMessages.length - n;
+            
+            if (targetIndex >= 0 && targetIndex < myMessages.length) {
+              const msgToDelete = myMessages[targetIndex];
+              await MessageService.deleteMessage(msgToDelete.id, user.id);
             }
           }
           setNewMessage('');

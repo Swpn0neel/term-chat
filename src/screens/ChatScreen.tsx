@@ -95,14 +95,12 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           const n = arg ? parseInt(arg) : 1;
           const myMessages = messages.filter(m => m.senderId === user.id);
           
-          // Get the last N messages
-          const msgsToDelete = myMessages.slice(-n);
+          // Get the Nth last message
+          const targetIndex = myMessages.length - n;
           
-          if (msgsToDelete.length > 0) {
-            // Delete all of them
-            await Promise.all(
-              msgsToDelete.map(msg => MessageService.deleteMessage(msg.id, user.id))
-            );
+          if (targetIndex >= 0 && targetIndex < myMessages.length) {
+            const msgToDelete = myMessages[targetIndex];
+            await MessageService.deleteMessage(msgToDelete.id, user.id);
           }
         }
         setNewMessage('');
