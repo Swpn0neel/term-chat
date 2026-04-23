@@ -6,7 +6,7 @@ import { Alert } from '../components/ui/feedback/Alert';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { AuthService } from '../services/authService';
 import { SessionService } from '../services/sessionService';
-
+import { AppShell } from '../components/ui/templates/AppShell';
 import { Heading } from '../components/ui/typography/Heading';  
 import { Title } from '../components/ui/typography/Title';
 import { Screen } from '../App';
@@ -25,7 +25,6 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
   const [activeField, setActiveField] = useState<'username' | 'password' | 'confirmPassword'>('username');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true); // Start as loading for session check
-
 
   // Auto-login check on mount
   useEffect(() => {
@@ -113,99 +112,108 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
 
   if (isLoading && !username) {
     return (
-      <Box padding={1}>
-        <Spinner label="Checking session..." />
-      </Box>
+      <AppShell>
+        <AppShell.Header>
+          <Box flexDirection="column" padding={1}>
+            <Title>TermChat</Title>
+            <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
+          </Box>
+        </AppShell.Header>
+        <AppShell.Content>
+          <Box padding={1}>
+            <Spinner label="Checking session..." />
+          </Box>
+        </AppShell.Content>
+      </AppShell>
     );
   }
 
   return (
-    <Box flexDirection="column" padding={1}>
-      <Box marginBottom={2} flexDirection="column" gap={1}>
-        <Title>TermChat</Title>
-        <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
-      </Box>
-
-      <Box width="100%" flexDirection="column">
-        <Box gap={2} marginBottom={1}>
-          <Text color={mode === 'signin' ? theme.colors.primary : undefined} bold={mode === 'signin'}>
-            {mode === 'signin' ? '●' : '○'} Sign In
-          </Text>
-          <Text color={mode === 'signup' ? theme.colors.primary : undefined} bold={mode === 'signup'}>
-            {mode === 'signup' ? '●' : '○'} Sign Up
-          </Text>
+    <AppShell>
+      <AppShell.Header>
+        <Box flexDirection="column" padding={1}>
+          <Title>TermChat</Title>
+          <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
         </Box>
+      </AppShell.Header>
 
-        <Box flexDirection="column" gap={1} width="100%">
-          <Box flexDirection="column">
-            <Text color={activeField === 'username' ? theme.colors.primary : undefined}>
-              Username:
+      <AppShell.Content>
+        <Box padding={1} flexDirection="column">
+          <Box gap={2} marginBottom={1}>
+            <Text color={mode === 'signin' ? "green" : undefined} bold={mode === 'signin'}>
+              {mode === 'signin' ? '●' : '○'} Sign In
             </Text>
-            <TextInput 
-              value={username}
-              onChange={setUsername}
-              isFocused={activeField === 'username'}
-              autoFocus={activeField === 'username'}
-              bordered={true}
-              placeholder="enter username..."
-              onSubmit={handleSubmit}
-            />
+            <Text color={mode === 'signup' ? "green" : undefined} bold={mode === 'signup'}>
+              {mode === 'signup' ? '●' : '○'} Sign Up
+            </Text>
           </Box>
 
-          <Box flexDirection="column">
-            <Text color={activeField === 'password' ? theme.colors.primary : undefined}>
-              Password:
-            </Text>
-            <TextInput 
-              value={password}
-              onChange={setPassword}
-              mask="*"
-              isFocused={activeField === 'password'}
-              autoFocus={activeField === 'password'}
-              bordered={true}
-              placeholder="••••••••"
-              onSubmit={handleSubmit}
-            />
-          </Box>
-
-          {mode === 'signup' && (
+          <Box flexDirection="column" gap={1} width="100%">
             <Box flexDirection="column">
-              <Text color={activeField === 'confirmPassword' ? theme.colors.primary : undefined}>
-                Confirm Password:
+              <Text color={activeField === 'username' ? theme.colors.primary : undefined}>
+                Username:
               </Text>
               <TextInput 
-                value={confirmPassword}
-                onChange={setConfirmPassword}
+                value={username}
+                onChange={setUsername}
+                isFocused={activeField === 'username'}
+                autoFocus={activeField === 'username'}
+                bordered={true}
+                placeholder="enter username..."
+                onSubmit={handleSubmit}
+              />
+            </Box>
+
+            <Box flexDirection="column">
+              <Text color={activeField === 'password' ? theme.colors.primary : undefined}>
+                Password:
+              </Text>
+              <TextInput 
+                value={password}
+                onChange={setPassword}
                 mask="*"
-                isFocused={activeField === 'confirmPassword'}
-                autoFocus={activeField === 'confirmPassword'}
+                isFocused={activeField === 'password'}
+                autoFocus={activeField === 'password'}
                 bordered={true}
                 placeholder="••••••••"
                 onSubmit={handleSubmit}
               />
             </Box>
+
+            {mode === 'signup' && (
+              <Box flexDirection="column">
+                <Text color={activeField === 'confirmPassword' ? theme.colors.primary : undefined}>
+                  Confirm Password:
+                </Text>
+                <TextInput 
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  mask="*"
+                  isFocused={activeField === 'confirmPassword'}
+                  autoFocus={activeField === 'confirmPassword'}
+                  bordered={true}
+                  placeholder="••••••••"
+                  onSubmit={handleSubmit}
+                />
+              </Box>
+            )}
+          </Box>
+
+          {error && (
+            <Box marginTop={1}>
+              <Alert variant="error">{error}</Alert>
+            </Box>
+          )}
+
+          {isLoading && (
+            <Box marginTop={1} gap={1}>
+              <Spinner label="Authenticating..." />
+            </Box>
           )}
         </Box>
-      </Box>
+      </AppShell.Content>
 
-      {error && (
-        <Box marginTop={1}>
-          <Alert variant="error">{error}</Alert>
-        </Box>
-      )}
-
-      {isLoading && (
-        <Box marginTop={1} gap={1}>
-          <Spinner label="Authenticating..." />
-        </Box>
-      )}
-
-      <Box marginTop={1} flexDirection="column">
-        <Text color={theme.colors.mutedForeground} dimColor>
-          [↑/↓] Switch Field | [Tab] Toggle Mode | [Enter] Submit | [Esc] Quit
-        </Text>
-      </Box>
-    </Box>
+      <AppShell.Hints items={['↑/↓: Switch Field', 'Tab: Toggle Mode', 'Enter: Submit', 'Esc: Quit']} />
+    </AppShell>
   );
 }
-

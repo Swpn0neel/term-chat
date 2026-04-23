@@ -29,7 +29,7 @@ export function Badge({
   color,
   bold = false,
   bordered = true,
-  borderStyle = 'round',
+  borderStyle = 'single',
   paddingX = 1,
 }: BadgeProps) {
   const theme = useTheme();

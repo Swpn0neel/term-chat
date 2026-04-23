@@ -45,7 +45,7 @@ export function TextInput({
   id,
   isFocused: externalIsFocused,
   bordered = true,
-  borderStyle = 'round',
+  borderStyle = 'single',
   paddingX = 1,
   cursor = '█',
 }: TextInputProps) {

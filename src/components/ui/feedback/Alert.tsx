@@ -67,7 +67,7 @@ export function Alert({
 
   return (
     <Box
-      borderStyle={bordered ? (borderStyle ?? theme.border.style) : undefined}
+      borderStyle={bordered ? (borderStyle ?? 'single') : undefined}
       borderColor={variantColor}
       paddingX={paddingX}
       paddingY={paddingY}

@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useStdout } from 'ink';
 import { useInput, useTheme } from 'termui';
 
 export interface AppShellProps {
@@ -37,8 +37,15 @@ export interface AppShellHintsProps {
 }
 
 function AppShellRoot({ children }: AppShellProps) {
+  const { stdout } = useStdout();
+  
+  // Use terminal dimensions to ensure the shell fills the window
   return (
-    <Box flexDirection="column" flexGrow={1}>
+    <Box 
+      flexDirection="column" 
+      height={stdout?.rows ?? 24} 
+      width={stdout?.columns ?? 80}
+    >
       {children}
     </Box>
   );
@@ -88,7 +95,7 @@ function AppShellInput({
 
   return (
     <Box
-      borderStyle={borderStyle}
+      borderStyle={borderStyle === 'round' ? 'single' : borderStyle}
       borderColor={borderColor ?? theme.colors.border}
       flexDirection="row"
       paddingX={1}
@@ -104,7 +111,7 @@ function AppShellInput({
   );
 }
 
-function AppShellContent({ children, height = 20, autoscroll = false }: AppShellContentProps) {
+function AppShellContent({ children, height, autoscroll = false }: AppShellContentProps) {
   const [scrollTop, setScrollTop] = useState(0);
 
   // Only listen to scroll keys if explicitly enabled (to avoid fighting with Select components)
@@ -115,7 +122,7 @@ function AppShellContent({ children, height = 20, autoscroll = false }: AppShell
   });
 
   return (
-    <Box flexDirection="row" height={height} overflow="hidden">
+    <Box flexDirection="row" flexGrow={1} height={height} overflow="hidden">
       <Box flexGrow={1} flexDirection="column" marginTop={-scrollTop as number}>
         {children}
       </Box>

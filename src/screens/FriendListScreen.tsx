@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useTheme } from 'termui';
 import { AppShell } from '../components/ui/templates/AppShell';
-import { Select } from '../components/ui/selection/Select';
 import { Alert } from '../components/ui/feedback/Alert';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { SocialService } from '../services/socialService';
 import { Heading } from '../components/ui/typography/Heading';
 import { Title } from '../components/ui/typography/Title';
 import { formatLastSeen } from '../lib/dateUtils';
+import { ClackSelect } from '@/clack/prompts';
 
 export default function FriendListScreen({ user, navigate, unreadCounts = {} }: any) {
   const theme = useTheme();
@@ -65,8 +65,8 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
           </Box>
         ) : (
           <Box padding={1}>
-            <Select 
-              label="Select a friend to start chatting:"
+            <ClackSelect 
+              label="Select a friend to start chatting"
               options={friends.map(f => {
                 const lastSeenDate = new Date(f.lastSeen);
                 const diffMs = Date.now() - lastSeenDate.getTime();
@@ -76,7 +76,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
                 const lastSeenStr = formatLastSeen(f.lastSeen);
 
                 return {
-                  label: `💬 ${f.username} ${count > 0 ? '●' : ''}`,
+                  label: `${f.username}${count > 0 ? ' ●' : ''}`,
                   value: f.id,
                   hint: (
                     <Text>

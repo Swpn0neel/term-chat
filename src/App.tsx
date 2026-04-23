@@ -10,6 +10,7 @@ import CreateGroupScreen from './screens/CreateGroupScreen';
 import GroupChatScreen from './screens/GroupChatScreen';
 import ChatScreen from './screens/ChatScreen';
 import AIChatScreen from './screens/AIChatScreen';
+import RemoveFriendScreen from './screens/RemoveFriendScreen';
 import { session } from './lib/session';
 import { AuthService } from './services/authService';
 import { SocialService } from './services/socialService';
@@ -18,7 +19,7 @@ import { shutdown } from './lib/shutdown';
 
 export type Screen =
   | 'auth' | 'dashboard' | 'add-friend'
-  | 'pending' | 'friend-list' | 'chat' | 'ai-chat'
+  | 'pending' | 'friend-list' | 'chat' | 'ai-chat' | 'remove-friend'
   | 'group-list' | 'create-group' | 'group-chat';
 
 export type NavigateFn = (screen: Screen, params?: Record<string, string>) => void;
@@ -71,6 +72,9 @@ export default function App() {
     if (key.escape) {
       if (screen === 'auth' || screen === 'dashboard') {
         shutdown(sessionUser?.id || null);
+      } else if (screen === 'create-group') {
+        // Let the screen handle it
+        return;
       } else {
         setScreen('dashboard');
       }
@@ -106,6 +110,7 @@ export default function App() {
         }
       }} />}
       {screen === 'ai-chat'     && <AIChatScreen user={sessionUser!} navigate={navigate} />}
+      {screen === 'remove-friend' && <RemoveFriendScreen user={sessionUser!} navigate={navigate} />}
       {screen === 'group-list'  && <GroupListScreen user={sessionUser!} navigate={navigate} unreadCounts={groupUnreadCounts} />}
       {screen === 'create-group' && <CreateGroupScreen user={sessionUser!} navigate={navigate} />}
       {screen === 'group-chat'  && <GroupChatScreen user={sessionUser!} groupId={params.groupId} navigate={navigate} onRead={() => {

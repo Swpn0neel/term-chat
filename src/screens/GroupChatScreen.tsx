@@ -172,7 +172,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="blue" gap={1}>
+        <Box paddingX={1} borderStyle="single" borderColor="green" gap={1}>
           <Heading level={1}>{group?.name || '...'}</Heading>
           <Box>
             <Text dimColor>[ </Text>
@@ -218,7 +218,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                   
                   allLines.push(
                     <Box key={msg.id} width="100%" justifyContent="center" paddingY={0}>
-                      <Text color={isJoin ? '#50fa7b' : isLeave ? '#ff5555' : 'gray'} italic>
+                      <Text color={isJoin ? 'green' : isLeave ? 'red' : 'gray'} italic>
                         {msg.content}
                       </Text>
                     </Box>
@@ -240,7 +240,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                       {idx === 0 ? (
                         <>
                           <Text dimColor color="gray">[{time}] </Text>
-                          <Text color={isMe ? '#50fa7b' : 'blue'} bold>
+                          <Text color={isMe ? '#50fa7b' : theme.colors.primary} bold>
                             {isMe ? 'You' : msg.sender.username}:
                           </Text>
                         </>
@@ -278,7 +278,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
         onChange={setNewMessage}
         onSubmit={handleSend}
         borderStyle="single"
-        borderColor="blue"
+        borderColor="green"
       />
       <AppShell.Hints items={[
         'Enter: Send', 

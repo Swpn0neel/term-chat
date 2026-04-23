@@ -54,7 +54,7 @@ export function List({
   return (
     <Box flexDirection="column">
       {filterable && (
-        <Box borderStyle="round" borderColor={theme.colors.border} paddingX={1} marginBottom={1}>
+        <Box borderStyle="single" borderColor={theme.colors.border} paddingX={1} marginBottom={1}>
           <Text dimColor={!filter}>{filter || 'Type to filter…'}</Text>
         </Box>
       )}

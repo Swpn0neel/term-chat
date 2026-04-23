@@ -92,6 +92,50 @@ export class SocialService {
   }
 
   /**
+   * Accept or Decline multiple requests
+   */
+  static async respondToMultipleRequests(requestIds: string[], action: 'ACCEPT' | 'DECLINE') {
+    if (action === 'ACCEPT') {
+      return await prisma.friendRequest.updateMany({
+        where: { id: { in: requestIds } },
+        data: { status: Status.ACCEPTED },
+      });
+    } else {
+      return await prisma.friendRequest.deleteMany({
+        where: { id: { in: requestIds } },
+      });
+    }
+  }
+
+  /**
+   * Check if two users are friends
+   */
+  static async getFriendship(userId: string, targetId: string) {
+    return await prisma.friendRequest.findFirst({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: targetId, status: Status.ACCEPTED },
+          { senderId: targetId, receiverId: userId, status: Status.ACCEPTED },
+        ],
+      },
+    });
+  }
+
+  /**
+   * Remove multiple friends
+   */
+  static async removeFriends(userId: string, friendIds: string[]) {
+    return await prisma.friendRequest.deleteMany({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: { in: friendIds }, status: Status.ACCEPTED },
+          { senderId: { in: friendIds }, receiverId: userId, status: Status.ACCEPTED },
+        ],
+      },
+    });
+  }
+
+  /**
    * Fetch all mutual friends
    */
   static async getFriendList(userId: string) {
@@ -108,9 +152,34 @@ export class SocialService {
       },
     });
 
-    return friendships.map(f => {
+    const friends = friendships.map(f => {
       return f.senderId === userId ? f.receiver : f.sender;
     });
+
+    // Get the last message timestamp for each friend to enable activity-based sorting
+    const friendsWithActivity = await Promise.all(
+      friends.map(async friend => {
+        const lastMsg = await prisma.message.findFirst({
+          where: {
+            OR: [
+              { senderId: userId, receiverId: friend.id },
+              { senderId: friend.id, receiverId: userId }
+            ],
+            isAIChat: false
+          },
+          orderBy: { createdAt: 'desc' },
+          select: { createdAt: true }
+        });
+        return {
+          ...friend,
+          lastActivity: lastMsg?.createdAt || new Date(0)
+        };
+      })
+    );
+
+    // Sort by last activity (most recent first)
+    return friendsWithActivity
+      .sort((a, b) => b.lastActivity.getTime() - a.lastActivity.getTime());
   }
 
   /**

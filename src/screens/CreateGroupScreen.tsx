@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { AppShell } from '../components/ui/templates/AppShell';
-import { Select } from '../components/ui/selection/Select';
 import { SocialService } from '../services/socialService';
 import { GroupService } from '../services/groupService';
 import { Spinner } from '../components/ui/feedback/Spinner';
-import { Heading } from '../components/ui/typography/Heading';
 import { Title } from '../components/ui/typography/Title';
+import { ClackMultiSelect } from '@/clack/prompts';
 
 export default function CreateGroupScreen({ user, navigate }: any) {
   const [step, setStep] = useState(1);
@@ -39,27 +38,12 @@ export default function CreateGroupScreen({ user, navigate }: any) {
     }
   });
 
-  const handleToggleMember = (val: string) => {
-    if (val === 'done') {
-      handleCreate();
-      return;
-    }
-    
-    setSelectedIds(prev => {
-      if (prev.includes(val)) {
-        return prev.filter(id => id !== val);
-      } else {
-        return [...prev, val];
-      }
-    });
-  };
-
-  const handleCreate = async () => {
+  const handleCreate = async (ids?: string[]) => {
     if (!groupName.trim()) return;
     
     setIsCreating(true);
     try {
-      const group = await GroupService.createGroup(groupName, user.id, selectedIds);
+      const group = await GroupService.createGroup(groupName, user.id, ids || selectedIds);
       navigate('group-chat', { groupId: group.id });
     } catch (err) {
       setIsCreating(false);
@@ -97,6 +81,7 @@ export default function CreateGroupScreen({ user, navigate }: any) {
                 if (groupName.trim()) setStep(2);
               }}
               placeholder="e.g. My Awesome Group"
+              borderStyle="single"
             />
           </Box>
         ) : (
@@ -105,27 +90,22 @@ export default function CreateGroupScreen({ user, navigate }: any) {
               <Spinner label="Loading friends..." />
             ) : (
               <>
-                <Text>Select Friends to Add:</Text>
-                <Text dimColor>(Use ↑↓ to move, Enter to toggle, select 'Finish' when done)</Text>
-                <Box marginTop={1}>
-                  <Select 
-                    label="Friends"
-                    options={[
-                      { label: `✅ Finish Selection (${selectedIds.length} selected)`, value: 'done' },
-                      ...friends.map(f => ({
-                        label: `${selectedIds.includes(f.id) ? '☑' : '☐'} ${f.username}`,
-                        value: f.id
-                      }))
-                    ]}
-                    onSubmit={handleToggleMember}
+                  <ClackMultiSelect 
+                    label="Select Friends to Add"
+                    options={friends.map(f => ({
+                      label: f.username,
+                      value: f.id
+                    }))}
+                    value={selectedIds}
+                    onChange={setSelectedIds}
+                    onSubmit={handleCreate}
                   />
-                </Box>
               </>
             )}
           </Box>
         )}
       </AppShell.Content>
-      <AppShell.Hints items={['Esc: Back', 'Enter: Select/Confirm', '↑↓: Move']} />
+      <AppShell.Hints items={['Esc: Back', 'Space: Toggle', 'Enter: Next/Create', '↑↓: Move']} />
     </AppShell>
   );
 }

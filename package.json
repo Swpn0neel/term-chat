@@ -30,6 +30,7 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
+    "@clack/prompts": "^1.2.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",

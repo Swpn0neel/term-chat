@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { AppShell } from '../components/ui/templates/AppShell';
-import { Select } from '../components/ui/selection/Select';
 import { GroupService } from '../services/groupService';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { Heading } from '../components/ui/typography/Heading';
 import { Title } from '../components/ui/typography/Title';
+import { ClackSelect, ClackOption } from '@/clack/prompts';
 
 export default function GroupListScreen({ user, navigate, unreadCounts = {} }: any) {
   const [groups, setGroups] = useState<any[]>([]);
@@ -36,16 +36,18 @@ export default function GroupListScreen({ user, navigate, unreadCounts = {} }: a
     }
   };
 
-  const options = [
-    { label: '➕ Create New Group', value: 'create-new' },
+  const options: ClackOption[] = [
     ...groups.map(g => {
       const unreadCount = unreadCounts[g.id] || 0;
       return {
-        label: `👥 ${g.name} ${unreadCount > 0 ? '●' : ''}`,
+        label: `${g.name}${unreadCount > 0 ? ' ●' : ''}`,
         value: g.id,
         hint: `${unreadCount > 0 ? `${unreadCount} new | ` : ''}${g.members.length} members`
       };
-    })
+    }),
+    // Spacer if there are groups
+    ...(groups.length > 0 ? [{ label: '', value: 'sep1', isSpacer: true }, { label: '', value: 'sep2', isSpacer: true }] : []),
+    { label: 'Create New Group', value: 'create-new' }
   ];
 
   return (
@@ -65,8 +67,8 @@ export default function GroupListScreen({ user, navigate, unreadCounts = {} }: a
           </Box>
         ) : (
           <Box padding={1} flexDirection="column">
-            <Select 
-              label="Groups"
+            <ClackSelect 
+              label="Select a group or create one"
               options={options}
               onSubmit={handleSelect}
             />

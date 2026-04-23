@@ -22,7 +22,7 @@ export function Heading({
   level = 1,
   children,
   color,
-  prefix1 = '██ ',
+  prefix1 = '› ',
   prefix2 = '▌ ',
   prefix3 = '› ',
   uppercase = false,

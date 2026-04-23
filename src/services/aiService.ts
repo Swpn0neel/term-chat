@@ -46,7 +46,7 @@ export class AIService {
   /**
    * Fetch AI chat history from DB
    */
-  static async getHistory(userId: string, limit = 50): Promise<ChatMessage[]> {
+  static async getHistory(userId: string): Promise<ChatMessage[]> {
     const messages = await prisma.message.findMany({
       where: {
         senderId: userId,
@@ -55,7 +55,6 @@ export class AIService {
       orderBy: {
         createdAt: 'desc',
       },
-      take: limit,
     });
 
     // Reorder to ascending for UI and map to Gemini format
@@ -69,7 +68,7 @@ export class AIService {
    * Save a message and enforce the 50-message limit
    */
   static async saveMessage(userId: string, content: string, isAIResponse: boolean) {
-    // 1. Save the new message
+    // Save the new message - cleanup logic removed as per user request
     await prisma.message.create({
       data: {
         senderId: userId,
@@ -79,28 +78,6 @@ export class AIService {
         isAIResponse
       }
     });
-
-    // 2. Enforce Strict Cleanup (Limit to 50)
-    const oldMessages = await prisma.message.findMany({
-      where: {
-        senderId: userId,
-        isAIChat: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      skip: 50,
-      select: { id: true }
-    });
-
-    if (oldMessages.length > 0) {
-      const idsToDelete = oldMessages.map(m => m.id);
-      await prisma.message.deleteMany({
-        where: {
-          id: { in: idsToDelete }
-        }
-      });
-    }
   }
 
   /**

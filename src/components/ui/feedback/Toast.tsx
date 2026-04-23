@@ -70,7 +70,7 @@ export function Toast({ message, variant = 'info', duration = 3000, onDismiss, i
 
   return (
     <Box
-      borderStyle="round"
+      borderStyle="single"
       borderColor={variantColor}
       paddingX={1}
       paddingY={0}

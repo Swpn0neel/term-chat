@@ -42,7 +42,7 @@ export function Modal({
   title,
   width = 60,
   children,
-  borderStyle = 'round',
+  borderStyle = 'single',
   borderColor,
   paddingX = 1,
   paddingY = 0,

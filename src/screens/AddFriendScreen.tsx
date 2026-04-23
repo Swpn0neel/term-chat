@@ -57,6 +57,7 @@ export default function AddFriendScreen({ user, navigate }: any) {
           <Box marginTop={1} flexDirection="column">
             <TextInput 
               label="User to invite:"
+              borderStyle='single'
               value={username}
               onChange={setUsername}
               onSubmit={handleSubmit}

@@ -2,19 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useTheme } from 'termui';
 import { AppShell } from '../components/ui/templates/AppShell';
-import { Select } from '../components/ui/selection/Select';
 import { Alert } from '../components/ui/feedback/Alert';
 import { Spinner } from '../components/ui/feedback/Spinner';
 import { SocialService } from '../services/socialService';
-import { Heading } from '../components/ui/typography/Heading';
 import { Title } from '../components/ui/typography/Title';
+import { ClackMultiSelect } from '@/clack/prompts';
 
 export default function PendingRequestsScreen({ user, navigate, onUpdate }: any) {
   const theme = useTheme();
   const [requests, setRequests] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const fetchRequests = async (isInitial = false) => {
     if (isInitial) setIsLoading(true);
@@ -23,7 +22,7 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
       setRequests(data);
       if (onUpdate) onUpdate(data.length);
     } catch (err: any) {
-      if (isInitial) setError('Failed to load requests.');
+      setError(`Failed to load requests: ${err.message}`);
     } finally {
       if (isInitial) setIsLoading(false);
     }
@@ -35,23 +34,19 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
     return () => clearInterval(interval);
   }, [user.id]);
 
-  const handleAction = async (action: 'ACCEPT' | 'DECLINE') => {
-    const request = requests[selectedIndex];
-    if (!request) return;
+  const handleBulkAction = async (action: 'ACCEPT' | 'DECLINE', idsOverride?: string[]) => {
+    const ids = idsOverride || selectedIds;
+    if (ids.length === 0) return;
 
     setIsLoading(true);
     try {
-      await SocialService.respondToRequest(request.id, action);
-      // Remove from local list
-      const nextRequests = requests.filter(r => r.id !== request.id);
+      await SocialService.respondToMultipleRequests(ids, action);
+      const nextRequests = requests.filter(r => !ids.includes(r.id));
       setRequests(nextRequests);
+      setSelectedIds([]);
       if (onUpdate) onUpdate(nextRequests.length);
-      
-      if (selectedIndex >= requests.length - 1 && selectedIndex > 0) {
-        setSelectedIndex(selectedIndex - 1);
-      }
     } catch (err: any) {
-      setError(`Failed to ${action.toLowerCase()} request.`);
+      setError(`Failed to ${action.toLowerCase()} requests.`);
     } finally {
       setIsLoading(false);
     }
@@ -64,18 +59,8 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
       navigate('dashboard');
     }
 
-    if (key.upArrow) {
-      setSelectedIndex(i => Math.max(0, i - 1));
-    }
-    if (key.downArrow) {
-      setSelectedIndex(i => Math.min(requests.length - 1, i + 1));
-    }
-
-    if (input === 'a' || input === 'A') {
-      handleAction('ACCEPT');
-    }
     if (input === 'd' || input === 'D') {
-      handleAction('DECLINE');
+      handleBulkAction('DECLINE');
     }
   });
 
@@ -99,24 +84,18 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
             <Text dimColor>No pending requests. Go add some friends!</Text>
           </Box>
         ) : (
-          <Box flexDirection="column" padding={1}>
-            <Box marginBottom={1}>
-              <Text bold>Choose a request and use A (Accept) or D (Decline):</Text>
-            </Box>
-            {requests.map((req, idx) => {
-              const isActive = idx === selectedIndex;
-              return (
-                <Box key={req.id} gap={1}>
-                  <Text color={isActive ? theme.colors.primary : undefined}>
-                    {isActive ? '›' : ' '}
-                  </Text>
-                  <Text color={isActive ? theme.colors.primary : undefined} bold={isActive}>
-                    {req.sender.username}
-                  </Text>
-                  <Text dimColor>({new Date(req.createdAt).toLocaleDateString()})</Text>
-                </Box>
-              );
-            })}
+          <Box padding={1} flexDirection="column">
+            <ClackMultiSelect 
+              label="Pending Requests"
+              options={requests.map(req => ({
+                label: req.sender.username,
+                value: req.id,
+                hint: new Date(req.createdAt).toLocaleDateString()
+              }))}
+              value={selectedIds}
+              onChange={setSelectedIds}
+              onSubmit={(ids) => handleBulkAction('ACCEPT', ids)}
+            />
           </Box>
         )}
 
@@ -126,7 +105,7 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
           </Box>
         )}
       </AppShell.Content>
-      <AppShell.Hints items={['a: Accept', 'd: Decline', 'Esc: Back']} />
+      <AppShell.Hints items={['Space: Toggle', 'Enter: Accept All', 'd: Decline All', 'Esc: Back']} />
     </AppShell>
   );
 }

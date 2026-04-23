@@ -21,7 +21,7 @@ export class MessageService {
   /**
    * Fetch conversation history between two users
    */
-  static async getConversation(userId: string, friendId: string, limit = 50) {
+  static async getConversation(userId: string, friendId: string) {
     return await prisma.message.findMany({
       where: {
         OR: [
@@ -32,7 +32,6 @@ export class MessageService {
       orderBy: {
         createdAt: 'asc',
       },
-      take: limit,
       include: {
         sender: {
           select: { username: true },
@@ -91,19 +90,27 @@ export class MessageService {
     });
     if (!member) throw new Error('You are not a member of this group.');
 
-    return await prisma.message.create({
+    const msg = await prisma.message.create({
       data: {
         senderId,
         groupId,
         content: content.trim(),
       },
     });
+
+    // Update group's updatedAt to sort active groups to the top
+    await prisma.group.update({
+      where: { id: groupId },
+      data: { updatedAt: new Date() }
+    });
+
+    return msg;
   }
 
   /**
    * Fetch conversation history for a group
    */
-  static async getGroupConversation(groupId: string, userId: string, limit = 100) {
+  static async getGroupConversation(groupId: string, userId: string) {
     // Check membership
     const member = await prisma.groupMember.findUnique({
       where: { groupId_userId: { groupId, userId } }
@@ -113,7 +120,6 @@ export class MessageService {
     return await prisma.message.findMany({
       where: { groupId },
       orderBy: { createdAt: 'asc' },
-      take: limit,
       include: {
         sender: {
           select: { username: true },

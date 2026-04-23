@@ -20,6 +20,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isFriend, setIsFriend] = useState(true);
   const [scrollOffset, setScrollOffset] = useState(0);
   
   const { stdout } = useStdout();
@@ -32,8 +33,11 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
         select: { username: true, isOnline: true, lastSeen: true }
       });
       setFriend(data);
+      
+      const friendship = await SocialService.getFriendship(user.id, friendId);
+      setIsFriend(!!friendship);
     } catch (err) {}
-  }, [friendId]);
+  }, [user.id, friendId]);
 
   const markRead = useCallback(async () => {
     try {
@@ -77,7 +81,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
 
   const handleSend = async () => {
     const userMessage = newMessage.trim();
-    if (!userMessage || isSending) return;
+    if (!userMessage || isSending || !isFriend) return;
 
 
 
@@ -136,8 +140,8 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="blue" gap={1}>
-          <Text bold color="blue">{friend?.username || '...'}</Text>
+        <Box paddingX={1} borderStyle="single" borderColor="green" gap={1}>
+          <Text bold color={theme.colors.primary}>› {friend?.username || '...'}</Text>
           {friend && (
             <Box>
               <Text dimColor>[ </Text>
@@ -219,7 +223,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                       {idx === 0 ? (
                         <>
                           <Text dimColor color="gray">[{time}] </Text>
-                          <Text color={isMe ? '#50fa7b' : 'blue'} bold>
+                          <Text color={isMe ? '#50fa7b' : theme.colors.primary} bold>
                             {isMe ? 'You' : msg.sender.username}:
                           </Text>
                         </>
@@ -252,14 +256,20 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           </Box>
         )}
       </AppShell.Content>
-      <AppShell.Input
-        placeholder="Type a message..."
-        value={newMessage}
-        onChange={setNewMessage}
-        onSubmit={handleSend}
-        borderStyle="single"
-        borderColor="blue"
-      />
+      {!isFriend ? (
+        <Box padding={1} borderStyle="single" borderColor="red" justifyContent="center">
+          <Text color="red" bold>You cannot message this user because you are not friends.</Text>
+        </Box>
+      ) : (
+        <AppShell.Input
+          placeholder="Type a message..."
+          value={newMessage}
+          onChange={setNewMessage}
+          onSubmit={handleSend}
+          borderStyle="single"
+          borderColor="green"
+        />
+      )}
       <AppShell.Hints items={['/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
     </AppShell>
   );

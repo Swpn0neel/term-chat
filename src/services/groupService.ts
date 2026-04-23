@@ -46,6 +46,9 @@ export class GroupService {
       });
     }
 
+    // Touch group to update activity
+    await prisma.group.update({ where: { id: group.id }, data: { updatedAt: new Date() } });
+
     return group;
   }
 
@@ -53,7 +56,7 @@ export class GroupService {
    * Fetch all groups the user is a member of
    */
   static async getGroupsForUser(userId: string) {
-    return await prisma.group.findMany({
+    const groups = await prisma.group.findMany({
       where: {
         members: {
           some: { userId }
@@ -67,11 +70,22 @@ export class GroupService {
             }
           }
         },
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { createdAt: true }
+        },
         _count: {
           select: { messages: true }
         }
-      },
-      orderBy: { updatedAt: 'desc' }
+      }
+    });
+
+    // Sort by actual last message activity (or creation time if no messages)
+    return groups.sort((a, b) => {
+      const aTime = a.messages[0]?.createdAt.getTime() || a.createdAt.getTime();
+      const bTime = b.messages[0]?.createdAt.getTime() || b.createdAt.getTime();
+      return bTime - aTime;
     });
   }
 
@@ -122,6 +136,9 @@ export class GroupService {
         type: MessageType.SYSTEM
       }
     });
+
+    // Touch group to update activity
+    await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } });
   }
 
   /**
@@ -145,6 +162,9 @@ export class GroupService {
         type: MessageType.SYSTEM
       }
     });
+
+    // Touch group to update activity
+    await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } });
   }
 
   /**
@@ -165,6 +185,9 @@ export class GroupService {
         type: MessageType.SYSTEM
       }
     });
+
+    // Touch group to update activity
+    await prisma.group.update({ where: { id: groupId }, data: { updatedAt: new Date() } });
 
     const memberCount = await prisma.groupMember.count({ where: { groupId } });
     if (memberCount === 0) {
