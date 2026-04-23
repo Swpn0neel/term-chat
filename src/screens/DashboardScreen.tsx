@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { AppShell } from '../components/ui/templates/AppShell';
-import { SessionService } from '../services/sessionService';
-import { Title } from '../components/ui/typography/Title';
-import { ClackSelect } from '@/clack/prompts';
+import { AppShell } from '@/components/AppShell';
+import { SessionService } from '@/services/sessionService';
+import { Title } from '@/components/Title';
+import { ClackSelect } from '@/components/Menu';
 
 export default function DashboardScreen({ user, navigate, unreadCount = 0, pendingCount = 0, groupUnreadCount = 0 }: any) {
   const handleSelect = (val: string) => {

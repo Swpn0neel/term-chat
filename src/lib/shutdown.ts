@@ -1,5 +1,5 @@
-import { AuthService } from '../services/authService';
-import { prisma } from '../lib/prisma';
+import { AuthService } from '@/services/authService';
+import { prisma } from '@/lib/prisma';
 
 export async function shutdown(userId: string | null) {
   try {

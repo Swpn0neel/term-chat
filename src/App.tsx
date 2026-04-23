@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { ThemeProvider, draculaTheme, useInput } from 'termui';
-import AuthScreen from './screens/AuthScreen';
-import DashboardScreen from './screens/DashboardScreen';
-import AddFriendScreen from './screens/AddFriendScreen';
-import PendingRequestsScreen from './screens/PendingRequestsScreen';
-import FriendListScreen from './screens/FriendListScreen';
-import GroupListScreen from './screens/GroupListScreen';
-import CreateGroupScreen from './screens/CreateGroupScreen';
-import GroupChatScreen from './screens/GroupChatScreen';
-import ChatScreen from './screens/ChatScreen';
-import AIChatScreen from './screens/AIChatScreen';
-import RemoveFriendScreen from './screens/RemoveFriendScreen';
-import { session } from './lib/session';
-import { AuthService } from './services/authService';
-import { SocialService } from './services/socialService';
-import { GroupService } from './services/groupService';
-import { shutdown } from './lib/shutdown';
+import AuthScreen from '@/screens/AuthScreen';
+import DashboardScreen from '@/screens/DashboardScreen';
+import AddFriendScreen from '@/screens/AddFriendScreen';
+import PendingRequestsScreen from '@/screens/PendingRequestsScreen';
+import FriendListScreen from '@/screens/FriendListScreen';
+import GroupListScreen from '@/screens/GroupListScreen';
+import CreateGroupScreen from '@/screens/CreateGroupScreen';
+import GroupChatScreen from '@/screens/GroupChatScreen';
+import ChatScreen from '@/screens/ChatScreen';
+import AIChatScreen from '@/screens/AIChatScreen';
+import RemoveFriendScreen from '@/screens/RemoveFriendScreen';
+import { session } from '@/lib/session';
+import { AuthService } from '@/services/authService';
+import { SocialService } from '@/services/socialService';
+import { GroupService } from '@/services/groupService';
+import { shutdown } from '@/lib/shutdown';
 
 export type Screen =
   | 'auth' | 'dashboard' | 'add-friend'

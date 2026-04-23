@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { AppShell } from '../components/ui/templates/AppShell';
-import { SocialService } from '../services/socialService';
-import { GroupService } from '../services/groupService';
-import { Spinner } from '../components/ui/feedback/Spinner';
-import { Title } from '../components/ui/typography/Title';
-import { ClackMultiSelect } from '@/clack/prompts';
+import { AppShell } from '@/components/AppShell';
+import { SocialService } from '@/services/socialService';
+import { GroupService } from '@/services/groupService';
+import { Spinner } from '@/components/Spinner';
+import { Title } from '@/components/Title';
+import { ClackMultiSelect } from '@/components/Menu';
 
 export default function CreateGroupScreen({ user, navigate }: any) {
   const [step, setStep] = useState(1);

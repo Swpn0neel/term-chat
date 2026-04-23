@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useTheme } from 'termui';
-import { AppShell } from '../components/ui/templates/AppShell';
-import { Alert } from '../components/ui/feedback/Alert';
-import { Spinner } from '../components/ui/feedback/Spinner';
-import { SocialService } from '../services/socialService';
-import { Title } from '../components/ui/typography/Title';
-import { ClackMultiSelect } from '@/clack/prompts';
+import { AppShell } from '@/components/AppShell';
+import { Alert } from '@/components/Alert';
+import { Spinner } from '@/components/Spinner';
+import { SocialService } from '@/services/socialService';
+import { Title } from '@/components/Title';
+import { ClackMultiSelect } from '@/components/Menu';
 
 export default function RemoveFriendScreen({ user, navigate }: any) {
   const theme = useTheme();

@@ -1,5 +1,5 @@
-import { prisma } from '../lib/prisma';
-import pkg_prisma from '../generated/client';
+import { prisma } from '@/lib/prisma';
+import pkg_prisma from '@/generated/client';
 const { Status } = pkg_prisma;
 
 export class SocialService {

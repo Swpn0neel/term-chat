@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
-import { AppShell } from '../components/ui/templates/AppShell';
-import { GroupService } from '../services/groupService';
-import { Spinner } from '../components/ui/feedback/Spinner';
-import { Heading } from '../components/ui/typography/Heading';
-import { Title } from '../components/ui/typography/Title';
-import { ClackSelect, ClackOption } from '@/clack/prompts';
+import { AppShell } from '@/components/AppShell';
+import { GroupService } from '@/services/groupService';
+import { Spinner } from '@/components/Spinner';
+import { Heading } from '@/components/Heading';
+import { Title } from '@/components/Title';
+import { ClackSelect, ClackOption } from '@/components/Menu';
 
 export default function GroupListScreen({ user, navigate, unreadCounts = {} }: any) {
   const [groups, setGroups] = useState<any[]>([]);

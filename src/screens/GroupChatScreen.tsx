@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Text, useStdout } from 'ink';
 import wrapAnsi from 'wrap-ansi';
 import { useInput, useTheme } from 'termui';
-import { AppShell } from '../components/ui/templates/AppShell';
-import { Spinner } from '../components/ui/feedback/Spinner';
-import { MessageService } from '../services/messageService';
-import { GroupService } from '../services/groupService';
+import { AppShell } from '@/components/AppShell';
+import { Spinner } from '@/components/Spinner';
+import { MessageService } from '@/services/messageService';
+import { GroupService } from '@/services/groupService';
 
-import { Heading } from '../components/ui/typography/Heading';
+import { Heading } from '@/components/Heading';
 
 export default function GroupChatScreen({ user, groupId, navigate, onRead }: any) {
   const theme = useTheme();

@@ -1,6 +1,6 @@
-import { prisma } from '../lib/prisma';
+import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { SessionService } from './sessionService';
+import { SessionService } from '@/services/sessionService';
 
 export class AuthService {
   /**

@@ -2,14 +2,14 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Text, useStdout } from 'ink';
 import wrapAnsi from 'wrap-ansi';
 import { useInput, useTheme } from 'termui';
-import { AppShell } from '../components/ui/templates/AppShell';
-import { Spinner } from '../components/ui/feedback/Spinner';
-import { MessageService } from '../services/messageService';
-import { SocialService } from '../services/socialService';
-import { prisma } from '../lib/prisma';
+import { AppShell } from '@/components/AppShell';
+import { Spinner } from '@/components/Spinner';
+import { MessageService } from '@/services/messageService';
+import { SocialService } from '@/services/socialService';
+import { prisma } from '@/lib/prisma';
 
-import { Heading } from '../components/ui/typography/Heading';
-import { formatLastSeen } from '../lib/dateUtils';
+import { Heading } from '@/components/Heading';
+import { formatLastSeen } from '@/lib/dateUtils';
 
 export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   const onReadRef = useRef(onRead);

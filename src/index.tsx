@@ -2,10 +2,10 @@
 process.stdout.write('\x1Bc');
 
 import { render } from 'ink';
-import App from './App';
-import { session } from './lib/session';
-import { AuthService } from './services/authService';
-import { prisma } from './lib/prisma';
+import App from '@/App';
+import { session } from '@/lib/session';
+import { AuthService } from '@/services/authService';
+import { prisma } from '@/lib/prisma';
 
 render(<App />);
 

@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useTheme } from 'termui';
-import { AppShell } from '../components/ui/templates/AppShell';
-import { TextInput } from '../components/ui/input/TextInput';
-import { Alert } from '../components/ui/feedback/Alert';
-import { Spinner } from '../components/ui/feedback/Spinner';
-import { SocialService } from '../services/socialService';
-import { Heading } from '../components/ui/typography/Heading';
-import { Title } from '../components/ui/typography/Title';
+import { AppShell } from '@/components/AppShell';
+import { TextInput } from '@/components/TextInput';
+import { Alert } from '@/components/Alert';
+import { Spinner } from '@/components/Spinner';
+import { SocialService } from '@/services/socialService';
+import { Title } from '@/components/Title';
 
 export default function AddFriendScreen({ user, navigate }: any) {
   const theme = useTheme();

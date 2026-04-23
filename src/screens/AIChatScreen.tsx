@@ -2,11 +2,11 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Text, useStdout } from 'ink';
 import wrapAnsi from 'wrap-ansi';
 import { useInput, useTheme } from 'termui';
-import { AppShell } from '../components/ui/templates/AppShell';
-import { Spinner } from '../components/ui/feedback/Spinner';
-import { AIService, ChatMessage } from '../services/aiService';
+import { AppShell } from '@/components/AppShell';
+import { Spinner } from '@/components/Spinner';
+import { AIService, ChatMessage } from '@/services/aiService';
 
-import { Heading } from '../components/ui/typography/Heading';
+import { Heading } from '@/components/Heading';
 
 export default function AIChatScreen({ user, navigate }: any) {
   const theme = useTheme();

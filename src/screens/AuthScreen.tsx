@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useTheme } from 'termui';
-import { TextInput } from '../components/ui/input/TextInput';
-import { Alert } from '../components/ui/feedback/Alert';
-import { Spinner } from '../components/ui/feedback/Spinner';
-import { AuthService } from '../services/authService';
-import { SessionService } from '../services/sessionService';
-import { AppShell } from '../components/ui/templates/AppShell';
-import { Heading } from '../components/ui/typography/Heading';  
-import { Title } from '../components/ui/typography/Title';
-import { Screen } from '../App';
+import { TextInput } from '@/components/TextInput';
+import { Alert } from '@/components/Alert';
+import { Spinner } from '@/components/Spinner';
+import { AuthService } from '@/services/authService';
+import { SessionService } from '@/services/sessionService';
+import { AppShell } from '@/components/AppShell';
+import { Heading } from '@/components/Heading';  
+import { Title } from '@/components/Title';
+import { Screen } from '@/App';
 
 interface AuthScreenProps {
   onAuth: (user: any) => void;
