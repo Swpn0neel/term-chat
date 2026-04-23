@@ -132,11 +132,14 @@ function AppShellContent({ children, height, autoscroll = false }: AppShellConte
 
 function AppShellHints({ items, children }: AppShellHintsProps) {
   const theme = useTheme();
-  const content = items ? items.join(' | ') : children;
+  const versionStr = process.env.APP_VERSION || process.env.npm_package_version;
+  const version = versionStr ? `(v${versionStr})` : '';
+  const content = items ? items.join(' | ') : (children as string);
+  
   return (
     <Box paddingX={1}>
       <Text dimColor color={theme.colors.mutedForeground}>
-        {content as string}
+        {version}{version && content ? ' | ' : ''}{content}
       </Text>
     </Box>
   );

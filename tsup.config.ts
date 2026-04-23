@@ -20,5 +20,10 @@ export default defineConfig({
   define: {
     'process.env.DATABASE_URL': JSON.stringify(process.env.DATABASE_URL),
     'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY),
+    'process.env.R2_ACCOUNT_ID': JSON.stringify(process.env.R2_ACCOUNT_ID),
+    'process.env.R2_ACCESS_KEY_ID': JSON.stringify(process.env.R2_ACCESS_KEY_ID),
+    'process.env.R2_SECRET_ACCESS_KEY': JSON.stringify(process.env.R2_SECRET_ACCESS_KEY),
+    'process.env.R2_BUCKET_NAME': JSON.stringify(process.env.R2_BUCKET_NAME),
+    'process.env.APP_VERSION': JSON.stringify(process.env.npm_package_version || '1.6.1'),
   },
 });
