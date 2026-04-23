@@ -5,7 +5,7 @@ import { SessionService } from '@/services/sessionService';
 import { Title } from '@/components/Title';
 import { ClackSelect } from '@/components/Menu';
 
-export default function DashboardScreen({ user, navigate, unreadCount = 0, pendingCount = 0, groupUnreadCount = 0 }: any) {
+export default function DashboardScreen({ user, navigate, unreadCount = 0, pendingCount = 0, groupUnreadCount = 0, fileTransferCount = 0 }: any) {
   const handleSelect = (val: string) => {
     if (val === 'auth') {
       // Deliberate Sign Out
@@ -44,6 +44,12 @@ export default function DashboardScreen({ user, navigate, unreadCount = 0, pendi
                 hint: groupUnreadCount > 0 ? `${groupUnreadCount} new` : undefined
               },
               { label: 'AI Chat', value: 'ai-chat' },
+              { label: 'Send File', value: 'send-file' },
+              { 
+                label: `File Inbox ${fileTransferCount > 0 ? '●' : ''}`, 
+                value: 'inbox',
+                hint: fileTransferCount > 0 ? `${fileTransferCount} pending` : undefined
+              },
               { 
                 label: `Pending Friend Requests ${pendingCount > 0 ? '●' : ''}`, 
                 value: 'pending',

@@ -22,6 +22,9 @@ model User {
 
   createdGroups    Group[]         @relation("GroupCreator")
   groupMemberships GroupMember[]
+
+  sentTransfers     FileTransfer[] @relation("TransferSender")
+  receivedTransfers FileTransfer[] @relation("TransferReceiver")
 }
 
 model FriendRequest {
@@ -95,4 +98,28 @@ enum GroupRole {
 enum MessageType {
   TEXT
   SYSTEM
+}
+
+model FileTransfer {
+  id           String         @id @default(cuid())
+  senderId     String
+  receiverId   String
+  fileName     String         // original filename shown to recipient
+  fileSize     Int            // bytes, for display
+  mimeType     String
+  r2Key        String         // object key in R2 bucket
+  status       TransferStatus @default(PENDING)
+  createdAt    DateTime       @default(now())
+  expiresAt    DateTime       // R2 object TTL (e.g. 7 days)
+  downloadedAt DateTime?
+
+  sender   User @relation("TransferSender",   fields: [senderId],   references: [id])
+  receiver User @relation("TransferReceiver", fields: [receiverId], references: [id])
+}
+
+enum TransferStatus {
+  PENDING      // uploaded to R2, waiting for recipient
+  DOWNLOADED   // recipient accepted and downloaded
+  DECLINED     // recipient declined, R2 object deleted
+  EXPIRED      // TTL passed, R2 object cleaned up
 }

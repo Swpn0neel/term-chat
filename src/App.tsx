@@ -11,16 +11,20 @@ import GroupChatScreen from '@/screens/GroupChatScreen';
 import ChatScreen from '@/screens/ChatScreen';
 import AIChatScreen from '@/screens/AIChatScreen';
 import RemoveFriendScreen from '@/screens/RemoveFriendScreen';
+import SendFileScreen from '@/screens/SendFileScreen';
+import InboxScreen from '@/screens/InboxScreen';
 import { session } from '@/lib/session';
 import { AuthService } from '@/services/authService';
 import { SocialService } from '@/services/socialService';
 import { GroupService } from '@/services/groupService';
+import { countPendingTransfers, cleanupExpiredTransfers } from '@/services/fileTransferService';
 import { shutdown } from '@/lib/shutdown';
 
 export type Screen =
   | 'auth' | 'dashboard' | 'add-friend'
   | 'pending' | 'friend-list' | 'chat' | 'ai-chat' | 'remove-friend'
-  | 'group-list' | 'create-group' | 'group-chat';
+  | 'group-list' | 'create-group' | 'group-chat'
+  | 'send-file' | 'inbox';
 
 export type NavigateFn = (screen: Screen, params?: Record<string, string>) => void;
 
@@ -32,6 +36,7 @@ export default function App() {
   const [pendingCount, setPendingCount] = useState(0);
   const [groupUnreadCounts, setGroupUnreadCounts] = useState<Record<string, number>>({});
   const [groupUnreadCount, setGroupUnreadCount] = useState(0);
+  const [fileTransferCount, setFileTransferCount] = useState(0);
 
   const navigate: NavigateFn = (s, p = {}) => {
     setScreen(s);
@@ -54,10 +59,14 @@ export default function App() {
         const pending = await SocialService.getPendingCount(sessionUser.id);
         const gCounts = await GroupService.getUnreadCounts(sessionUser.id);
         const totalGUnread = Object.values(gCounts).reduce((a, b) => a + b, 0);
+        const fileCount = await countPendingTransfers(sessionUser.id);
+        await cleanupExpiredTransfers();
+        
         setUnreadCounts(counts);
         setPendingCount(pending);
         setGroupUnreadCounts(gCounts);
         setGroupUnreadCount(totalGUnread);
+        setFileTransferCount(fileCount);
       } catch (err) {}
     };
 
@@ -94,6 +103,7 @@ export default function App() {
           unreadCount={totalUnread} 
           pendingCount={pendingCount} 
           groupUnreadCount={groupUnreadCount}
+          fileTransferCount={fileTransferCount}
         />
       )}
       {screen === 'add-friend'  && <AddFriendScreen user={sessionUser!} navigate={navigate} />}
@@ -124,6 +134,8 @@ export default function App() {
           setGroupUnreadCount(prev => Math.max(0, prev - countToClear));
         }
       }} />}
+      {screen === 'send-file'  && <SendFileScreen user={sessionUser!} navigate={navigate} />}
+      {screen === 'inbox'      && <InboxScreen user={sessionUser!} navigate={navigate} />}
     </ThemeProvider>
   );
 }
