@@ -26,7 +26,7 @@ export async function uploadToR2(
   filePath: string,
   key: string,
   mimeType: string,
-  onProgress: (pct: number) => void
+  onProgress: (pct: number, speed: number) => void
 ): Promise<void> {
   const uploadUrl = await getUploadUrl(key, mimeType);
   const fileSize = fs.statSync(filePath).size;
@@ -34,9 +34,13 @@ export async function uploadToR2(
 
   return new Promise((resolve, reject) => {
     let uploaded = 0;
+    const startTime = Date.now();
+    
     fileStream.on('data', (chunk) => {
       uploaded += chunk.length;
-      onProgress(Math.round((uploaded / fileSize) * 100));
+      const elapsed = (Date.now() - startTime) / 1000;
+      const speed = elapsed > 0 ? uploaded / elapsed : 0;
+      onProgress(Math.round((uploaded / fileSize) * 100), speed);
     });
 
     const url = new URL(uploadUrl);
@@ -91,7 +95,7 @@ export async function countPendingTransfers(userId: string): Promise<number> {
 export async function downloadFromR2(
   r2Key: string,
   destPath: string,
-  onProgress: (pct: number) => void
+  onProgress: (pct: number, speed: number) => void
 ): Promise<void> {
   const downloadUrl = await getDownloadUrl(r2Key);
   return new Promise((resolve, reject) => {
@@ -99,9 +103,13 @@ export async function downloadFromR2(
     https.get(downloadUrl, (res) => {
       const total = parseInt(res.headers['content-length'] ?? '0', 10);
       let received = 0;
+      const startTime = Date.now();
+
       res.on('data', (chunk) => {
         received += chunk.length;
-        if (total) onProgress(Math.round((received / total) * 100));
+        const elapsed = (Date.now() - startTime) / 1000;
+        const speed = elapsed > 0 ? received / elapsed : 0;
+        if (total) onProgress(Math.round((received / total) * 100), speed);
       });
       res.pipe(file);
       file.on('finish', () => { file.close(); resolve(); });
@@ -111,7 +119,7 @@ export async function downloadFromR2(
 
 // ── Accept a transfer ──────────────────────────────────────────────────────
 export async function acceptTransfer(transferId: string, destPath: string,
-  onProgress: (pct: number) => void) {
+  onProgress: (pct: number, speed: number) => void) {
   const transfer = await prisma.fileTransfer.findUniqueOrThrow({ where: { id: transferId } });
   const fullDest = path.join(destPath, transfer.fileName);
   await downloadFromR2(transfer.r2Key, fullDest, onProgress);

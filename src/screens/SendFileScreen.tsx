@@ -23,6 +23,7 @@ export default function SendFileScreen({ user, navigate }: any) {
   const [friends, setFriends] = useState<any[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
+  const [speed, setSpeed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [finalPath, setFinalPath] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState(0);
@@ -81,7 +82,10 @@ export default function SendFileScreen({ user, navigate }: any) {
       const r2Key = generateR2Key(user.id, fileName);
       const mimeType = mime.lookup(finalPath!) || 'application/octet-stream';
 
-      await uploadToR2(finalPath!, r2Key, mimeType, setProgress);
+      await uploadToR2(finalPath!, r2Key, mimeType, (pct, s) => {
+        setProgress(pct);
+        setSpeed(s);
+      });
 
       await createTransferRecord({
         senderId: user.id,
@@ -163,7 +167,7 @@ export default function SendFileScreen({ user, navigate }: any) {
               <Text bold>Uploading to Cloud...</Text>
               <Box gap={1}>
                 <ProgressBar pct={progress} />
-                <Text> {progress}%</Text>
+                <Text> {progress}% <Text dimColor> {speed ? `(↑ ${prettyBytes(speed)}/s)` : ""}</Text></Text>
               </Box>
               <Text dimColor>{prettyBytes(fileSize)} · {path.basename(finalPath!)}</Text>
             </Box>

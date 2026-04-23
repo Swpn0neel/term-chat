@@ -18,6 +18,7 @@ export default function InboxScreen({ user, navigate }: any) {
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
   const [destPath, setDestPath] = useState('');
   const [progress, setProgress] = useState(0);
+  const [speed, setSpeed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [savedPath, setSavedPath] = useState<string | null>(null);
 
@@ -80,7 +81,10 @@ export default function InboxScreen({ user, navigate }: any) {
     
     setStage('DOWNLOADING');
     try {
-      const fullPath = await acceptTransfer(selectedTransfer.id, destPath, setProgress);
+      const fullPath = await acceptTransfer(selectedTransfer.id, destPath, (pct, s) => {
+        setProgress(pct);
+        setSpeed(s);
+      });
       setSavedPath(fullPath);
       setStage('DONE');
     } catch (err: any) {
@@ -161,7 +165,7 @@ export default function InboxScreen({ user, navigate }: any) {
               <Text bold>Downloading from Cloud...</Text>
               <Box gap={1}>
                 <ProgressBar pct={progress} />
-                <Text> {progress}%</Text>
+                <Text> {progress}% <Text dimColor> {speed ? `(↓ ${prettyBytes(speed)}/s)` : ""}</Text></Text>
               </Box>
               <Text dimColor>{selectedTransfer.fileName}</Text>
             </Box>
