@@ -20,3 +20,27 @@ export function formatLastSeen(date: string | Date): string {
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
   }
 }
+
+export function formatDateSeparator(date: string | Date): string {
+  const d = new Date(date);
+  const now = new Date();
+  
+  const isToday = d.toDateString() === now.toDateString();
+  
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = d.toDateString() === yesterday.toDateString();
+
+  if (isToday) {
+    return 'Today';
+  } else if (isYesterday) {
+    return 'Yesterday';
+  } else {
+    return d.toLocaleDateString([], { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  }
+}

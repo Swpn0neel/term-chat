@@ -8,6 +8,7 @@ import { MessageService } from '@/services/messageService';
 import { GroupService } from '@/services/groupService';
 
 import { Heading } from '@/components/Heading';
+import { formatDateSeparator } from '@/lib/dateUtils';
 
 export default function GroupChatScreen({ user, groupId, navigate, onRead }: any) {
   const theme = useTheme();
@@ -201,7 +202,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
               const allLines: React.ReactNode[] = [];
 
               messages.forEach((msg) => {
-                const dateStr = new Date(msg.createdAt).toLocaleDateString();
+                const dateStr = formatDateSeparator(msg.createdAt);
                 if (dateStr !== lastDate) {
                   allLines.push(<Box key={`gap-${msg.id}`} height={1} />);
                   allLines.push(

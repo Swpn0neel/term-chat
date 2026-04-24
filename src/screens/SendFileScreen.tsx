@@ -28,14 +28,18 @@ export default function SendFileScreen({ user, navigate }: any) {
   const [finalPath, setFinalPath] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState(0);
   const [isZipping, setIsZipping] = useState(false);
+  const [isLoadingFriends, setIsLoadingFriends] = useState(true);
 
   useEffect(() => {
-    SocialService.getFriendList(user.id).then(setFriends);
+    setIsLoadingFriends(true);
+    SocialService.getFriendList(user.id)
+      .then(setFriends)
+      .finally(() => setIsLoadingFriends(false));
   }, [user.id]);
 
-  useInput((input, key) => {
+  useInput((_input, key) => {
     if (key.escape) {
-      navigate('dashboard');
+      navigate('dashboard', { initialMenu: 'files' });
     }
   });
 
@@ -102,7 +106,7 @@ export default function SendFileScreen({ user, navigate }: any) {
         fs.unlinkSync(finalPath);
       }
 
-      setTimeout(() => navigate('dashboard'), 2000);
+      setTimeout(() => navigate('dashboard', { initialMenu: 'files' }), 2000);
     } catch (err: any) {
       setError(`Upload failed: ${err.message}`);
       setStage('ERROR');
@@ -122,28 +126,45 @@ export default function SendFileScreen({ user, navigate }: any) {
       
       <AppShell.Content>
         <Box padding={1} flexDirection="column">
-          {stage === 'PATH' && (
-            <Box flexDirection="column">
-              <Text bold>Enter File or Folder Path:</Text>
-              <Box gap={1}>
-                <TextInput 
-                  borderStyle='single'
-                  value={filePath}
-                  onChange={(val) => {
-                    setFilePath(val);
-                    if (error) setError(null);
-                  }}
-                  onSubmit={handlePathSubmit}
-                  placeholder="e.g. /home/user/Documents"
-                  autoFocus
-                />
+          {isLoadingFriends ? (
+            <Box padding={1}>
+              <Spinner label="Checking friend list..." />
+            </Box>
+          ) : friends.length === 0 ? (
+            <Box flexDirection="column" gap={1}>
+              <Alert variant="error" title="No Friends Found">
+                You need to add friends before you can send files!
+              </Alert>
+              <Box marginTop={1}>
+                <Text color="yellow">Press Esc to return to the dashboard and add some friends.</Text>
               </Box>
-              {error && (
-                <Box marginTop={1}>
-                  <Alert variant="error" title="Error">{error}</Alert>
+            </Box>
+          ) : (
+            <>
+              {stage === 'PATH' && (
+                <Box flexDirection="column">
+                  <Text bold>Enter File or Folder Path:</Text>
+                  <Box gap={1}>
+                    <TextInput 
+                      borderStyle='single'
+                      value={filePath}
+                      onChange={(val) => {
+                        setFilePath(val);
+                        if (error) setError(null);
+                      }}
+                      onSubmit={handlePathSubmit}
+                      placeholder="e.g. /home/user/Documents"
+                      autoFocus
+                    />
+                  </Box>
+                  {error && (
+                    <Box marginTop={1}>
+                      <Alert variant="error" title="Error">{error}</Alert>
+                    </Box>
+                  )}
                 </Box>
               )}
-            </Box>
+            </>
           )}
 
           {isZipping && (

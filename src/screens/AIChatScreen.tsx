@@ -84,7 +84,7 @@ export default function AIChatScreen({ user, navigate }: any) {
     } else if (key.downArrow) {
       setScrollOffset(s => Math.max(0, s - 1));
     } else if (key.escape) {
-      navigate('dashboard');
+      navigate('dashboard', { initialMenu: 'chats' });
     }
   });
 

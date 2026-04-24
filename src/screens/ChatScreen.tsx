@@ -9,7 +9,7 @@ import { SocialService } from '@/services/socialService';
 import { prisma } from '@/lib/prisma';
 
 import { Heading } from '@/components/Heading';
-import { formatLastSeen } from '@/lib/dateUtils';
+import { formatLastSeen, formatDateSeparator } from '@/lib/dateUtils';
 
 export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   const onReadRef = useRef(onRead);
@@ -189,12 +189,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
               const allLines: React.ReactNode[] = [];
 
               messages.forEach((msg) => {
-                const dateStr = new Date(msg.createdAt).toLocaleDateString([], { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                });
+                const dateStr = formatDateSeparator(msg.createdAt);
                 
                 if (dateStr !== lastDate) {
                   // Add a gap line and then the date separator

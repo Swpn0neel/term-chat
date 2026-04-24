@@ -39,13 +39,13 @@ export default function InboxScreen({ user, navigate }: any) {
 
   useInput((input, key) => {
     if (key.escape) {
-      if (stage === 'LIST') navigate('dashboard');
+      if (stage === 'LIST') navigate('dashboard', { initialMenu: 'files' });
       else if (stage === 'ACTIONS') setStage('LIST');
       else if (stage === 'DESTINATION') {
         setStage('ACTIONS');
         setError(null);
       }
-      else if (stage === 'DONE' || stage === 'ERROR') navigate('dashboard');
+      else if (stage === 'DONE' || stage === 'ERROR') navigate('dashboard', { initialMenu: 'files' });
     }
   });
 

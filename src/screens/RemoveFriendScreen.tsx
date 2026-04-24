@@ -51,7 +51,7 @@ export default function RemoveFriendScreen({ user, navigate }: any) {
   useInput((_input, key) => {
     if (isRemoving) return;
     if (key.escape) {
-      navigate('dashboard');
+      navigate('dashboard', { initialMenu: 'friends' });
     }
   });
 

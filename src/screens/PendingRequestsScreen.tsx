@@ -56,7 +56,7 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
     if (isLoading) return;
 
     if (key.escape) {
-      navigate('dashboard');
+      navigate('dashboard', { initialMenu: 'friends' });
     }
 
     if (input === 'd' || input === 'D') {

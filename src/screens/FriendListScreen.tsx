@@ -37,7 +37,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
 
   useInput((_input, key) => {
     if (key.escape) {
-      navigate('dashboard');
+      navigate('dashboard', { initialMenu: 'chats' });
     }
   });
 
@@ -83,7 +83,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
                       <Text color={isTrulyOnline ? '#50fa7b' : 'gray'}>
                         {isTrulyOnline ? '● Online' : `○ Offline (last seen ${lastSeenStr})`}
                       </Text>
-                      {count > 0 && <Text color="yellow"> ({count} new)</Text>}
+                      {count > 0 && <Text dimColor> ({count} new)</Text>}
                     </Text>
                   ) as any
                 };

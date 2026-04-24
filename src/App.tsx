@@ -79,13 +79,23 @@ export default function App() {
 
   useInput((_input, key) => {
     if (key.escape) {
-      if (screen === 'auth' || screen === 'dashboard') {
+      if (screen === 'auth') {
         shutdown(sessionUser?.id || null);
-      } else if (screen === 'create-group') {
-        // Let the screen handle it
+      } else if (screen === 'dashboard') {
+        // Handled by DashboardScreen component for sub-menu support
         return;
       } else {
-        setScreen('dashboard');
+        const menuMapping: Record<string, string> = {
+          'add-friend': 'friends',
+          'remove-friend': 'friends',
+          'pending': 'friends',
+          'friend-list': 'chats',
+          'group-list': 'chats',
+          'ai-chat': 'chats',
+          'send-file': 'files',
+          'inbox': 'files',
+        };
+        navigate('dashboard', { initialMenu: menuMapping[screen] || 'main' });
       }
     }
   });
@@ -100,10 +110,12 @@ export default function App() {
         <DashboardScreen 
           user={sessionUser!} 
           navigate={navigate} 
+          params={params}
           unreadCount={totalUnread} 
           pendingCount={pendingCount} 
           groupUnreadCount={groupUnreadCount}
           fileTransferCount={fileTransferCount}
+          onShutdown={() => shutdown(sessionUser?.id || null)}
         />
       )}
       {screen === 'add-friend'  && <AddFriendScreen user={sessionUser!} navigate={navigate} />}

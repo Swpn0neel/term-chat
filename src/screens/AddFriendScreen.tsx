@@ -35,7 +35,7 @@ export default function AddFriendScreen({ user, navigate }: any) {
 
   useInput((_input, key) => {
     if (key.escape) {
-      navigate('dashboard');
+      navigate('dashboard', { initialMenu: 'friends' });
     }
   });
 
