@@ -1,6 +1,6 @@
 import { type ReactNode, useState } from 'react';
 import { Box, Text, useStdout } from 'ink';
-import { useInput, useTheme } from 'termui';
+import { useInput, useTheme } from '@/lib/theme';
 
 export interface AppShellProps {
   children: ReactNode;

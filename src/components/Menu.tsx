@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text } from 'ink';
-import { useInput, useTheme } from 'termui';
+import { useInput, useTheme } from '@/lib/theme';
 
 export interface ClackOption {
   label: string;

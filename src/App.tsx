@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ThemeProvider, draculaTheme, useInput } from 'termui';
+import { ThemeProvider, draculaTheme, useInput } from '@/lib/theme';
 import AuthScreen from '@/screens/AuthScreen';
 import DashboardScreen from '@/screens/DashboardScreen';
 import AddFriendScreen from '@/screens/AddFriendScreen';

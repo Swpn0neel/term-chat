@@ -1,5 +1,5 @@
 import { Box, Text } from 'ink';
-import { useTheme } from 'termui';
+import { useTheme } from '@/lib/theme';
 import type { ReactNode } from 'react';
 
 export type AlertVariant = 'success' | 'error' | 'warning' | 'info';

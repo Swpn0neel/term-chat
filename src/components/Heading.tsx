@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Box, Text } from 'ink';
-import { useTheme } from 'termui';
+import { useTheme } from '@/lib/theme';
 
 export type HeadingLevel = 1 | 2 | 3 | 4;
 

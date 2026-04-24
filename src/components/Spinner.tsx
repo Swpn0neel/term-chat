@@ -1,5 +1,5 @@
 import { Text } from 'ink';
-import { useAnimation, useTheme } from 'termui';
+import { useAnimation, useTheme } from '@/lib/theme';
 
 export type SpinnerStyle =
   | 'dots'

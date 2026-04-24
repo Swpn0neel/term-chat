@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text } from 'ink';
-import { useInput } from 'termui';
+import { useInput } from '@/lib/theme';
 import { AppShell } from '@/components/AppShell';
 import { SessionService } from '@/services/sessionService';
 import { Title } from '@/components/Title';

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Text, useStdout } from 'ink';
 import wrapAnsi from 'wrap-ansi';
-import { useInput, useTheme } from 'termui';
+import { useInput, useTheme } from '@/lib/theme';
 import { AppShell } from '@/components/AppShell';
 import { Spinner } from '@/components/Spinner';
 import { AIService, ChatMessage } from '@/services/aiService';

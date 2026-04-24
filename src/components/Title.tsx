@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { useTheme } from 'termui';
+import { useTheme } from '@/lib/theme';
 
 export interface TitleProps {
   children: string;

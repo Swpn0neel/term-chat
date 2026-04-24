@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Text } from 'ink';
-import { useInput, useFocus, useTheme } from 'termui';
+import { useInput, useFocus, useTheme } from '@/lib/theme';
 
 export interface TextInputProps {
   value?: string;

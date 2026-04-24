@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text } from 'ink';
-import { useInput, useTheme } from 'termui';
+import { useInput, useTheme } from '@/lib/theme';
 import { AppShell } from '@/components/AppShell';
 import { TextInput } from '@/components/TextInput';
 import { Alert } from '@/components/Alert';

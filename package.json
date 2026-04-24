@@ -46,8 +46,7 @@
     "pg": "^8.20.0",
     "pretty-bytes": "^7.1.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "termui": "^1.5.0"
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
     "@types/archiver": "^7.0.0",
