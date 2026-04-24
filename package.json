@@ -1,6 +1,6 @@
 {
   "name": "termchat-cli",
-  "version": "1.7.0",
+  "version": "1.7.2",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -62,6 +62,7 @@
   "overrides": {
     "ink": "$ink",
     "react": "$react",
-    "react-dom": "$react-dom"
+    "react-dom": "$react-dom",
+    "glob": "^13.0.0"
   }
 }

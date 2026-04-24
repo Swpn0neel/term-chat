@@ -14,6 +14,7 @@ export default function AIChatScreen({ user, navigate }: any) {
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [apiKey, setApiKey] = useState<string | null>(user.geminiApiKey || null);
   const [scrollOffset, setScrollOffset] = useState(0);
 
   const { stdout } = useStdout();
@@ -36,7 +37,22 @@ export default function AIChatScreen({ user, navigate }: any) {
     const userMessage = input.trim();
     if (!userMessage || isThinking) return;
 
-
+    if (userMessage.toLowerCase().startsWith('/set ')) {
+      const newKey = userMessage.split(' ')[1];
+      if (!newKey) return;
+      
+      try {
+        await AIService.updateApiKey(user.id, newKey);
+        setApiKey(newKey);
+        setInput('');
+        const systemMsg = "System: Your Gemini API key has been updated and saved.";
+        setHistory(h => [...h, { role: 'model', parts: [{ text: systemMsg }] }]);
+      } catch (err) {
+        const errorMsg = "System: Failed to save your API key. Try again later.";
+        setHistory(h => [...h, { role: 'model', parts: [{ text: errorMsg }] }]);
+      }
+      return;
+    }
 
     if (userMessage.toLowerCase() === '/clear') {
       try {
@@ -58,8 +74,12 @@ export default function AIChatScreen({ user, navigate }: any) {
 
     setIsThinking(true);
     try {
+      if (!apiKey) {
+        throw new Error('NO_KEY');
+      }
+
       await AIService.saveMessage(user.id, userMessage, false);
-      const response = await AIService.sendChatMessage(userMessage, history);
+      const response = await AIService.sendChatMessage(userMessage, history, apiKey);
       await AIService.saveMessage(user.id, response, true);
 
       setHistory(h => [
@@ -67,7 +87,14 @@ export default function AIChatScreen({ user, navigate }: any) {
         { role: 'model', parts: [{ text: response }] }
       ]);
     } catch (err: any) {
-      const fallback = "sorry, an error occured from my side. try again later.";
+      let fallback = "sorry, an error occured from my side. try again later.";
+      
+      if (err.message === 'NO_KEY') {
+        fallback = "You haven't set your Gemini API key yet. Please use '/set [your-key]' to start chatting with the assistant.";
+      } else if (err.message === 'INVALID_KEY') {
+        fallback = "Your API key seems to be invalid or expired. Please update it using '/set [your-key]'.";
+      }
+
       await AIService.saveMessage(user.id, fallback, true);
       setHistory(h => [
         ...h,
@@ -126,7 +153,7 @@ export default function AIChatScreen({ user, navigate }: any) {
                   allLines.push(
                     <Box key={`t${turnIdx}-l${idx}`} flexDirection="row">
                       {idx === 0 ? (
-                        <Text color={isUser ? '#50fa7b' : 'cyan'} bold>
+                        <Text color={isUser ? '#50fa7b' : theme.colors.primary} bold>
                           {prefix}
                         </Text>
                       ) : (
@@ -172,7 +199,7 @@ export default function AIChatScreen({ user, navigate }: any) {
         borderStyle="single"
         borderColor="green"
       />
-      <AppShell.Hints items={['Enter: Ask', '↑↓: Scroll', 'Esc: Back', '/clear: Clear']} />
+      <AppShell.Hints items={['Enter: Ask', '↑↓: Scroll', 'Esc: Back', '/clear: Clear', '/set [key]: Set API Key']} />
     </AppShell>
   );
 }

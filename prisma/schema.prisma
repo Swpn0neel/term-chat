@@ -11,6 +11,7 @@ model User {
   id        String   @id @default(cuid())
   username  String   @unique
   password  String   // bcrypt hash
+  geminiApiKey String? // For personal AI chat
   isOnline  Boolean  @default(false)
   lastSeen  DateTime @default(now())
   createdAt DateTime @default(now())

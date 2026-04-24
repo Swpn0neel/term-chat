@@ -20,27 +20,50 @@ export class AIService {
   static startChatSession(history: ChatMessage[] = []) {
     return model.startChat({
       history,
-      generationConfig: {
-        maxOutputTokens: 500,
-      },
     });
   }
 
   /**
    * Send a message and get a response from Gemini
    */
-  static async sendChatMessage(content: string, history: ChatMessage[] = []) {
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your-gemini-key') {
-      throw new Error('Gemini API Key is missing or invalid.');
+  static async sendChatMessage(content: string, history: ChatMessage[] = [], userApiKey?: string) {
+    const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+    
+    if (!apiKey || apiKey === 'your-gemini-key') {
+      throw new Error('NO_KEY');
     }
 
     try {
-      const chat = this.startChatSession(history);
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const userModel = genAI.getGenerativeModel({ 
+        model: 'gemini-2.5-flash',
+        systemInstruction: 'You are TermChat AI, a friendly and warm assistant integrated into a terminal chat application. Your responses MUST be total plain text ONLY. ABSOLUTELY NO markdown, no bolding (**), no italics (_), and no lists (no numbered lists, no bullet points). If you have multiple points to make, write them as consecutive, well-structured paragraphs of plain text. Keep it minimal, friendly, and extremely readable in a basic terminal without any special characters or decorations.'
+      });
+
+      const chat = userModel.startChat({
+        history,
+        generationConfig: {
+          maxOutputTokens: 2048,
+        },
+      });
       const result = await chat.sendMessage(content);
       return result.response.text();
     } catch (err: any) {
+      if (err.status === 403 || err.message?.includes('API key')) {
+        throw new Error('INVALID_KEY');
+      }
       throw err;
     }
+  }
+
+  /**
+   * Update user's personal Gemini API key
+   */
+  static async updateApiKey(userId: string, apiKey: string) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { geminiApiKey: apiKey.trim() }
+    });
   }
 
   /**
