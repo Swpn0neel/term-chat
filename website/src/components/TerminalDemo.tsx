@@ -74,7 +74,7 @@ export function TerminalDemo() {
   return (
     <div className="flex flex-col font-mono text-sm" style={{ height: 340 }}>
       {/* Header — contact bar */}
-      <div className="flex items-center gap-2 border-b border-[color:var(--color-border)]/60 pb-2 mb-2">
+      <div className="flex items-center gap-2 border-b border-border/60 pb-2 mb-2">
         <span className="text-accent">›</span>
         <span className="text-foreground font-bold">alex</span>
         <span className="text-muted-foreground text-xs">[</span>
@@ -116,7 +116,7 @@ export function TerminalDemo() {
       </div>
 
       {/* Input bar */}
-      <div className="flex items-center gap-1.5 border-t border-[color:var(--color-border)]/60 pt-2 mt-2">
+      <div className="flex items-center gap-1.5 border-t border-border/60 pt-2 mt-2">
         <span className="text-accent">›</span>
         <span className={inputText ? "text-foreground" : "text-muted-foreground"}>
           {inputText || "Type a message..."}

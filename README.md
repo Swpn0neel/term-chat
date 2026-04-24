@@ -2,19 +2,22 @@
 
 TermChat is a high-fidelity, real-time command-line interface chat application. It provides a sleek and responsive messaging experience directly within the terminal, leveraging modern web technologies like React and Ink to deliver a premium user interface.
 
+![Termchat](public/site.png)
+
 ## Table of Contents
 
 1. [Overview](#overview)
 2. [Core Features](#core-features)
 3. [Technological Stack](#technological-stack)
-4. [Prerequisites](#prerequisites)
-5. [Installation](#installation)
-6. [Configuration](#configuration)
-7. [Database Setup](#database-setup)
-8. [Usage and Navigation](#usage-and-navigation)
-9. [Development](#development)
-10. [Architecture](#architecture)
-11. [License](#license)
+4. [Web Documentation](#web-documentation--landing-page)
+5. [Prerequisites](#prerequisites)
+6. [Installation](#installation)
+7. [Configuration](#configuration)
+8. [Database Setup](#database-setup)
+9. [Usage and Navigation](#usage-and-navigation)
+10. [Development](#development)
+11. [Architecture](#architecture)
+12. [License](#license)
 
 ## Overview
 
