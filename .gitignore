@@ -17,6 +17,7 @@ build/
 website/src/routeTree.gen.ts
 .tanstack/
 .wrangler/
+.vercel/
 .dev.vars
 
 # Environment
