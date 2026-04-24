@@ -1,4 +1,4 @@
-# TermChat CLI
+# TermChat
 
 TermChat is a high-fidelity, real-time command-line interface chat application. It provides a sleek and responsive messaging experience directly within the terminal, leveraging modern web technologies like React and Ink to deliver a premium user interface.
 
@@ -87,6 +87,23 @@ TermChat CLI bridges the gap between terminal efficiency and modern chat applica
 - **TypeScript 6**: Type-safe development.
 - **tsup**: Fast, TypeScript-focused ESM bundling.
 - **tsx**: Next-generation TypeScript execution for development.
+
+## Web Documentation & Landing Page
+
+TermChat Official Site serves as a high-fidelity documentation hub and a visual mirror of the CLI experience. It is located in the `website/` directory of this repository.
+
+### Tech Stack:
+- **Framework:** [TanStack Start](https://tanstack.com/router/v1/docs/guide/start/overview) (React 19)
+- **Styling:** Tailwind CSS 4.0
+- **Aesthetics:** CSS-based CRT scanlines and interactive terminal simulations.
+
+### Local Web Setup:
+```bash
+cd website
+bun install
+bun dev
+```
+The site will be available at `http://localhost:3000`.
 
 ## Prerequisites
 
@@ -244,6 +261,7 @@ term-chat/
 │   │   ├── dateUtils.ts       # Formatting helpers
 │   │   └── shutdown.ts        # Cleanup & exit logic
 │   └── generated/             # Prisma generated client (gitignored)
+├── website/                   # Official landing page & documentation hub
 ├── prisma/
 │   └── schema.prisma          # PostgreSQL schema
 ├── prisma.config.ts           # Prisma datasource configuration
@@ -258,6 +276,7 @@ term-chat/
 - **src/services**: Encapsulates business logic and database interactions (AuthService, SocialService, GroupService, AIService).
 - **src/components**: Reusable UI elements built on top of TermUI with Clack-inspired styling.
 - **src/lib**: Utility libraries for session management, database adapters, and system shutdown handlers.
+- **website**: TanStack Start web application for project documentation and landing page.
 - **prisma**: Defines the data model and schema configuration.
 
 ## License

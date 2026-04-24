@@ -1,0 +1,158 @@
+@import "tailwindcss";
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-magenta: var(--magenta);
+  --color-success: var(--success);
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "VT323", "JetBrains Mono", monospace;
+}
+
+:root {
+  --radius: 0.125rem;
+
+  /* TermChat TUI: near-black bg, magenta brand, green terminal accents */
+  --background: oklch(0.14 0.005 280);
+  --foreground: oklch(0.92 0.01 280);
+
+  --card: oklch(0.17 0.008 280);
+  --card-foreground: oklch(0.92 0.01 280);
+  --popover: oklch(0.17 0.008 280);
+  --popover-foreground: oklch(0.92 0.01 280);
+
+  /* Primary = lavender/magenta brand (the TERMCHAT logo color) */
+  --primary: oklch(0.78 0.15 305);
+  --primary-foreground: oklch(0.14 0.005 280);
+
+  --secondary: oklch(0.22 0.015 280);
+  --secondary-foreground: oklch(0.92 0.01 280);
+
+  --muted: oklch(0.2 0.01 280);
+  --muted-foreground: oklch(0.62 0.02 280);
+
+  /* Accent = terminal green (the box border + selected items) */
+  --accent: oklch(0.78 0.21 145);
+  --accent-foreground: oklch(0.14 0.005 280);
+
+  --destructive: oklch(0.65 0.24 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --border: oklch(0.32 0.01 280);
+  --input: oklch(0.22 0.015 280);
+  --ring: oklch(0.78 0.15 305);
+
+  --magenta: oklch(0.78 0.15 305);
+  --success: oklch(0.78 0.21 145);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-mono);
+  }
+
+  ::selection {
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+
+  /* Subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+  }
+
+  /* Clack/TermChat style green-bordered panel */
+  .tui-box {
+    border: 1px solid var(--color-accent);
+    background: oklch(0.16 0.006 280);
+    border-radius: 2px;
+  }
+
+  .tui-box-muted {
+    border: 1px solid var(--color-border);
+    background: oklch(0.16 0.006 280);
+    border-radius: 2px;
+  }
+
+  /* Magenta diamond bullet */
+  .diamond::before {
+    content: "◆ ";
+    color: var(--color-primary);
+  }
+
+  .blink {
+    animation: blink 1s steps(2, end) infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* Subtle scanline overlay (optional, much lighter than before) */
+  .subtle-grid {
+    background-image:
+      linear-gradient(oklch(1 0 0 / 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(1 0 0 / 0.015) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+}
