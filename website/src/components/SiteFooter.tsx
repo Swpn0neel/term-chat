@@ -1,5 +1,4 @@
 import { useNpmVersion } from "@/hooks/useNpmVersion";
-import { SiteLogo } from "./SiteLogo";
 
 export function SiteFooter() {
   const version = useNpmVersion();
@@ -18,7 +17,6 @@ export function SiteFooter() {
           </div>
           <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-start">
             <div className="flex items-center gap-2">
-              <SiteLogo className="h-3.5 w-3.5 opacity-60 grayscale" />
               <span>© {new Date().getFullYear()} TermChat</span>
             </div>
             <span className="hidden md:inline">·</span>

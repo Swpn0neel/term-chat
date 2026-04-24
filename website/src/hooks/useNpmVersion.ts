@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 export function useNpmVersion(pkgName: string = "termchat-cli") {
-  const [version, setVersion] = useState<string>("v1.6.3");
+  const [version, setVersion] = useState<string>("v1.7.5");
 
   useEffect(() => {
     // Use jsDelivr to avoid CORS issues on registry.npmjs.org

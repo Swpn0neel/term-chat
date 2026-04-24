@@ -1,6 +1,6 @@
 {
   "name": "termchat-cli",
-  "version": "1.7.2",
+  "version": "1.7.5",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -36,7 +36,6 @@
     "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
-    "archiver": "^7.0.1",
     "bcryptjs": "^3.0.3",
     "cli-progress": "^3.12.0",
     "dotenv": "^17.4.2",
@@ -54,6 +53,8 @@
     "@types/mime-types": "^3.0.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "archiver": "^7.0.1",
+    "glob": "^13.0.6",
     "prisma": "^7.7.0",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
@@ -63,6 +64,6 @@
     "ink": "$ink",
     "react": "$react",
     "react-dom": "$react-dom",
-    "glob": "^13.0.0"
+    "glob": "^13.0.6"
   }
 }

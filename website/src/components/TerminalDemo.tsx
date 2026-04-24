@@ -39,7 +39,7 @@ export function TerminalDemo() {
   // Reveal lines one by one
   useEffect(() => {
     if (visibleCount < CHAT_SCRIPT.length) {
-      const delay = CHAT_SCRIPT[visibleCount].kind === "blank" ? 60 : 200;
+      const delay = CHAT_SCRIPT[visibleCount].kind === "blank" ? 60 : 600;
       const t = setTimeout(() => setVisibleCount((n) => n + 1), delay);
       return () => clearTimeout(t);
     }
@@ -86,7 +86,6 @@ export function TerminalDemo() {
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto space-y-0.5 pr-1"
-        style={{ scrollbarWidth: "none" }}
       >
         {CHAT_SCRIPT.slice(0, visibleCount).map((line, i) => {
           if (line.kind === "date") {
@@ -126,7 +125,7 @@ export function TerminalDemo() {
 
       {/* Key hints footer */}
       {/* <div className="flex flex-wrap gap-x-2 mt-1 text-[10px] text-muted-foreground">
-        <span className="text-accent">(v1.6.3)</span>
+        <span className="text-accent">(v1.7.5)</span>
         <span>|</span>
         <span>Enter: Send</span>
         <span>|</span>
