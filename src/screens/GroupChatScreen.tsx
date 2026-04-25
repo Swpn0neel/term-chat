@@ -179,7 +179,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="green" gap={1}>
+        <Box paddingX={1} borderStyle="single" borderColor="#50fa7b" gap={1}>
           <Heading level={1}>{group?.name || '...'}</Heading>
           <Box>
             <Text dimColor>[ </Text>
@@ -194,7 +194,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
             <Spinner label="Loading conversation..." />
           </Box>
         ) : (
-          <Box flexDirection="column" paddingX={1} paddingY={1} width="100%" flexGrow={1}>
+          <Box flexDirection="column" paddingX={1} width="100%">
             {(() => {
               if (messages.length === 0) {
                 return <Text dimColor italic>No messages yet. Say hi!</Text>;
@@ -202,7 +202,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
 
               const width = stdout?.columns || 100;
               const height = stdout?.rows || 24;
-              const chatHeight = Math.max(5, height - 12);
+              const chatHeight = Math.max(5, height - 7);
 
               // Build per-sender color map from group members
               // Fallback to theme.primary for null colors (backward compat with existing members)
@@ -223,6 +223,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                       <Text color="gray" dimColor>── {dateStr} ──</Text>
                     </Box>
                   );
+                  allLines.push(<Box key={`date-gap-${msg.id}`} height={1} />);
                   lastDate = dateStr;
                 }
 
@@ -232,17 +233,22 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
 
                   allLines.push(
                     <Box key={msg.id} width="100%" justifyContent="center" paddingY={0}>
-                      <Text color={isJoin ? 'green' : isLeave ? 'red' : 'gray'} italic>
+                      <Text color={isJoin ? '#50fa7b' : isLeave ? 'red' : 'gray'} italic>
                         {msg.content}
                       </Text>
                     </Box>
                   );
+                  allLines.push(<Box key={`msg-gap-${msg.id}`} height={1} />);
                   return;
                 }
 
                 const isMe = msg.senderId === user.id;
-                const msgColor = senderColorMap[msg.senderId] ?? theme.colors.primary;
                 const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                // Find member color
+                const member = group?.members?.find((m: any) => m.userId === msg.senderId);
+                const userColor = member?.color || (isMe ? '#50fa7b' : theme.colors.primary);
+
                 const prefix = `[${time}] ${isMe ? 'You' : msg.sender.username}: `;
                 const prefixLen = prefix.length;
 
@@ -255,7 +261,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                       {idx === 0 ? (
                         <>
                           <Text dimColor color="gray">[{time}] </Text>
-                          <Text color={msgColor} bold>
+                          <Text color={userColor} bold>
                             {isMe ? 'You' : msg.sender.username}:
                           </Text>
                         </>
@@ -266,6 +272,9 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                     </Box>
                   );
                 });
+                
+                // Add vertical gap between messages
+                allLines.push(<Box key={`msg-gap-${msg.id}`} height={1} />);
               });
 
               const maxLines = Math.max(1, chatHeight);
@@ -293,13 +302,13 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
         onChange={setNewMessage}
         onSubmit={handleSend}
         borderStyle="single"
-        borderColor="green"
+        borderColor="#50fa7b"
       />
       <AppShell.Hints items={[
         'Enter: Send',
         '↑↓: Scroll',
         'Esc: Back',
-        '/changeColour: Pick new color',
+        '/changeColour: Change color',
         '/delete [n|all]: Delete',
         ...(group?.creatorId === user.id ? ['/add [user]', '/remove [user]'] : []),
         '/leave'

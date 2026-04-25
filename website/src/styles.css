@@ -37,7 +37,7 @@
 :root {
   --radius: 0.125rem;
 
-  /* TermChat TUI: near-black bg, magenta brand, green terminal accents */
+  /* TermChat TUI: near-black bg, magenta brand, #50fa7b terminal accents */
   --background: oklch(0.14 0.005 280);
   --foreground: oklch(0.92 0.01 280);
 
@@ -56,7 +56,7 @@
   --muted: oklch(0.2 0.01 280);
   --muted-foreground: oklch(0.62 0.02 280);
 
-  /* Accent = terminal green (the box border + selected items) */
+  /* Accent = terminal #50fa7b (the box border + selected items) */
   --accent: oklch(0.78 0.21 145);
   --accent-foreground: oklch(0.14 0.005 280);
 
@@ -105,7 +105,7 @@
     letter-spacing: 0.02em;
   }
 
-  /* Clack/TermChat style green-bordered panel */
+  /* Clack/TermChat style #50fa7b-bordered panel */
   .tui-box {
     border: 1px solid var(--color-accent);
     background: oklch(0.16 0.006 280);

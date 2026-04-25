@@ -67,17 +67,13 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
       {options.map((option, index) => {
         const isActive = index === activeIndex;
         
-        if (option.isSpacer) {
-          return (
-            <Box key={option.value} gap={1}>
-              <Text color="gray">  │</Text>
-              <Text color="gray">  </Text>
-              <Text color="gray" italic dimColor>{option.label}</Text>
-            </Box>
-          );
-        }
-
-        return (
+        const optionBox = option.isSpacer ? (
+          <Box key={option.value} gap={1}>
+            <Text color="gray">  │</Text>
+            <Text color="gray">  </Text>
+            <Text color="gray" italic dimColor>{option.label}</Text>
+          </Box>
+        ) : (
           <Box key={option.value} gap={1}>
             <Text color="gray">  │</Text>
             <Text color={isActive ? theme.colors.primary : "gray"}>
@@ -101,6 +97,13 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
               </Box>
             )}
           </Box>
+        );
+
+        return (
+          <React.Fragment key={option.value}>
+            {index > 0 && <Text color="gray">  │</Text>}
+            {optionBox}
+          </React.Fragment>
         );
       })}
     </Box>
@@ -171,25 +174,21 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
       {/* Options */}
       {options.map((option, index) => {
         const isActive = index === activeIndex;
-
-        if (option.isSpacer) {
-          return (
-            <Box key={option.value} gap={1}>
-              <Text color="gray">  │</Text>
-              <Text color="gray">    </Text>
-              <Text color="gray" italic dimColor>{option.label}</Text>
-            </Box>
-          );
-        }
-
         const isSelected = value.includes(option.value);
-        return (
+
+        const optionBox = option.isSpacer ? (
+          <Box key={option.value} gap={1}>
+            <Text color="gray">  │</Text>
+            <Text color="gray">    </Text>
+            <Text color="gray" italic dimColor>{option.label}</Text>
+          </Box>
+        ) : (
           <Box key={option.value} gap={1}>
             <Text color="gray">  │</Text>
             <Text color={isActive ? theme.colors.primary : "gray"}>
               {isActive ? "●" : " "}
             </Text>
-            <Text color={isSelected ? theme.colors.primary : "gray"}>
+            <Text color={isSelected ? theme.colors.primary : "gray"} key={isSelected ? 's' : 'u'}>
               {isSelected ? "◼" : "◻"}
             </Text>
             <Text color={isActive ? "#50fa7b" : "gray"}>
@@ -210,6 +209,13 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
               </Box>
             )}
           </Box>
+        );
+
+        return (
+          <React.Fragment key={option.value}>
+            {index > 0 && <Text color="gray">  │</Text>}
+            {optionBox}
+          </React.Fragment>
         );
       })}
     </Box>

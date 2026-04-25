@@ -1,6 +1,7 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
 import { Box, Text, useStdout } from 'ink';
 import { useInput, useTheme } from '@/lib/theme';
+import { session } from '@/lib/session';
 
 export interface AppShellProps {
   children: ReactNode;
@@ -132,14 +133,27 @@ function AppShellContent({ children, height, autoscroll = false }: AppShellConte
 
 function AppShellHints({ items, children }: AppShellHintsProps) {
   const theme = useTheme();
+  const [connStatus, setConnStatus] = useState(session.getConnectionStatus());
+  
+  useEffect(() => {
+    return session.subscribeToConnection(setConnStatus);
+  }, []);
+
   const versionStr = process.env.APP_VERSION || process.env.npm_package_version;
-  const version = versionStr ? `(v${versionStr})` : '';
+  const statusColor = connStatus === 'online' ? "#50fa7b" : connStatus === 'slow' ? "yellow" : "red";
+  
+  const statusIndicator = (
+    <Text>
+      (<Text color={statusColor}>●</Text> {versionStr ? `v${versionStr}` : 'v1.7.5'})
+    </Text>
+  );
+
   const content = items ? items.join(' | ') : (children as string);
   
   return (
     <Box paddingX={1}>
       <Text dimColor color={theme.colors.mutedForeground}>
-        {version}{version && content ? ' | ' : ''}{content}
+        {statusIndicator}{content ? ' | ' : ''}{content}
       </Text>
     </Box>
   );

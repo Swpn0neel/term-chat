@@ -48,11 +48,15 @@ export default function App() {
     session.setUserId(sessionUser?.id || null);
   }, [sessionUser]);
 
-  // Heartbeat Loop (15 seconds) - Updates Status and Unread Counts
+  // Heartbeat Loop with Exponential Backoff
   useEffect(() => {
     if (!sessionUser) return;
 
+    let timeoutId: NodeJS.Timeout;
+    let failCount = 0;
+
     const fetchNotifications = async () => {
+      const startTime = Date.now();
       try {
         await AuthService.updateHeartbeat(sessionUser.id);
         const counts = await SocialService.getUnreadCounts(sessionUser.id);
@@ -67,14 +71,32 @@ export default function App() {
         setGroupUnreadCounts(gCounts);
         setGroupUnreadCount(totalGUnread);
         setFileTransferCount(fileCount);
-      } catch (err) {}
+
+        // Success: Reset backoff and check latency
+        failCount = 0;
+        const latency = Date.now() - startTime;
+        session.setConnectionStatus(latency > 1500 ? 'slow' : 'online');
+        
+        // Schedule next poll at 15s
+        timeoutId = setTimeout(fetchNotifications, 15000);
+      } catch (err) {
+        failCount++;
+        // Update status
+        if (failCount === 1) {
+          session.setConnectionStatus('slow');
+        } else if (failCount >= 3) {
+          session.setConnectionStatus('disconnected');
+        }
+
+        // Exponential backoff: 2s, 4s, 8s, 16s, max 30s
+        const backoff = Math.min(30000, Math.pow(2, failCount) * 1000);
+        timeoutId = setTimeout(fetchNotifications, backoff);
+      }
     };
 
-    // Initial fetch
     fetchNotifications();
 
-    const interval = setInterval(fetchNotifications, 15000);
-    return () => clearInterval(interval);
+    return () => clearTimeout(timeoutId);
   }, [sessionUser]);
 
   useInput((_input, key) => {

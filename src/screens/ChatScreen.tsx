@@ -140,7 +140,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="green" gap={1}>
+        <Box paddingX={1} borderStyle="single" borderColor="#50fa7b" gap={1}>
           <Text bold color={theme.colors.primary}>› {friend?.username || '...'}</Text>
           {friend && (
             <Box>
@@ -174,7 +174,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
             <Spinner label="Loading conversation history..." />
           </Box>
         ) : (
-          <Box flexDirection="column" paddingX={1} paddingY={1} width="100%" flexGrow={1}>
+          <Box flexDirection="column" paddingX={1} width="100%">
             {(() => {
               if (messages.length === 0) {
                 return <Text dimColor italic>No messages yet. Say hi!</Text>;
@@ -183,7 +183,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
               const width = stdout?.columns || 100;
               const height = stdout?.rows || 24;
               // Reserve space for header (3), footer border (1), input box (3), hints (1), paddingY (2)
-              const chatHeight = Math.max(5, height - 12);
+              const chatHeight = Math.max(5, height - 7);
 
               let lastDate = '';
               const allLines: React.ReactNode[] = [];
@@ -199,6 +199,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                       <Text color="gray" dimColor>── {dateStr} ──</Text>
                     </Box>
                   );
+                  allLines.push(<Box key={`date-gap-${msg.id}`} height={1} flexShrink={0} />);
                   lastDate = dateStr;
                 }
 
@@ -229,6 +230,9 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                     </Box>
                   );
                 });
+                
+                // Add vertical gap between messages
+                allLines.push(<Box key={`msg-gap-${msg.id}`} height={1} flexShrink={0} />);
               });
 
               // Slicing logic
@@ -262,7 +266,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           onChange={setNewMessage}
           onSubmit={handleSend}
           borderStyle="single"
-          borderColor="green"
+          borderColor="#50fa7b"
         />
       )}
       <AppShell.Hints items={['/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />

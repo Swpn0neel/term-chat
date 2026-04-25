@@ -140,10 +140,10 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
       <AppShell.Content>
         <Box padding={1} flexDirection="column">
           <Box gap={2} marginBottom={1}>
-            <Text color={mode === 'signin' ? "green" : undefined} bold={mode === 'signin'}>
+            <Text color={mode === 'signin' ? "#50fa7b" : undefined} bold={mode === 'signin'}>
               {mode === 'signin' ? '●' : '○'} Sign In
             </Text>
-            <Text color={mode === 'signup' ? "green" : undefined} bold={mode === 'signup'}>
+            <Text color={mode === 'signup' ? "#50fa7b" : undefined} bold={mode === 'signup'}>
               {mode === 'signup' ? '●' : '○'} Sign Up
             </Text>
           </Box>

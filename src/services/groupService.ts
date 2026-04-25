@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import pkg_prisma from '@/generated/client';
+import { GroupRole, MessageType } from '@/generated/client';
 import { getRandomColor, getNextColor } from '@/lib/groupColors';
-const { GroupRole, MessageType } = pkg_prisma;
 
 export class GroupService {
   /**
@@ -195,6 +194,25 @@ export class GroupService {
       await prisma.group.delete({ where: { id: groupId } });
     }
   }
+
+  /**
+   * Change a user's color in a group
+   */
+  static async changeMemberColor(groupId: string, userId: string) {
+    const member = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId, userId } }
+    });
+    if (!member) throw new Error('Member not found');
+
+    const newColor = getNextColor(member.color);
+    await prisma.groupMember.update({
+      where: { groupId_userId: { groupId, userId } },
+      data: { color: newColor }
+    });
+
+    return newColor;
+  }
+
   /**
    * Mark all messages in a group as read for a specific user
    */
@@ -253,21 +271,5 @@ export class GroupService {
       }
     }
     return counts;
-  }
-
-  /**
-   * Assign the next color in the pool to a member. Used by /changeColour.
-   */
-  static async changeMemberColor(groupId: string, userId: string) {
-    const member = await prisma.groupMember.findUnique({
-      where: { groupId_userId: { groupId, userId } },
-      select: { color: true }
-    });
-    const newColor = getNextColor(member?.color ?? null);
-    await prisma.groupMember.update({
-      where: { groupId_userId: { groupId, userId } },
-      data: { color: newColor }
-    });
-    return newColor;
   }
 }

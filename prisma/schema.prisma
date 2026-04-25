@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/client"
+  output = "../src/generated/client"
 }
 
 datasource db {
@@ -8,34 +8,34 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String   // bcrypt hash
+  id String @id @default(cuid())
+  username String @unique
+  password String // bcrypt hash
   geminiApiKey String? // For personal AI chat
-  isOnline  Boolean  @default(false)
-  lastSeen  DateTime @default(now())
+  isOnline Boolean @default(false)
+  lastSeen DateTime @default(now())
   createdAt DateTime @default(now())
 
-  sentRequests     FriendRequest[] @relation("Sender")
+  sentRequests FriendRequest[] @relation("Sender")
   receivedRequests FriendRequest[] @relation("Receiver")
-  sentMessages     Message[]       @relation("Sender")
-  receivedMessages Message[]       @relation("Receiver")
+  sentMessages Message[] @relation("Sender")
+  receivedMessages Message[] @relation("Receiver")
 
-  createdGroups    Group[]         @relation("GroupCreator")
+  createdGroups Group[] @relation("GroupCreator")
   groupMemberships GroupMember[]
 
-  sentTransfers     FileTransfer[] @relation("TransferSender")
+  sentTransfers FileTransfer[] @relation("TransferSender")
   receivedTransfers FileTransfer[] @relation("TransferReceiver")
 }
 
 model FriendRequest {
-  id         String   @id @default(cuid())
-  senderId   String
+  id String @id @default(cuid())
+  senderId String
   receiverId String
-  status     Status   @default(PENDING)
-  createdAt  DateTime @default(now())
+  status Status @default(PENDING)
+  createdAt DateTime @default(now())
 
-  sender   User @relation("Sender",   fields: [senderId],   references: [id])
+  sender User @relation("Sender", fields: [senderId], references: [id])
   receiver User @relation("Receiver", fields: [receiverId], references: [id])
 
   @@unique([senderId, receiverId])
@@ -48,46 +48,48 @@ enum Status {
 }
 
 model Message {
-  id           String   @id @default(cuid())
-  senderId     String
-  receiverId   String?
-  groupId      String?
-  content      String
-  type         MessageType @default(TEXT)
-  isAIChat     Boolean  @default(false)
-  isAIResponse Boolean  @default(false)
-  isRead       Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id String @id @default(cuid())
+  senderId String
+  receiverId String?
+  groupId String?
+  content String
+  type MessageType @default(TEXT)
+  isAIChat Boolean @default(false)
+  isAIResponse Boolean @default(false)
+  isRead Boolean @default(false)
+  createdAt DateTime @default(now())
+  title String?
+  model String?
 
-  sender   User   @relation("Sender",   fields: [senderId],   references: [id])
-  receiver User?  @relation("Receiver", fields: [receiverId], references: [id])
-  group    Group? @relation(fields: [groupId],    references: [id])
+  sender User @relation("Sender", fields: [senderId], references: [id])
+  receiver User? @relation("Receiver", fields: [receiverId], references: [id])
+  group Group? @relation(fields: [groupId], references: [id])
 }
 
 model Group {
-  id          String   @id @default(cuid())
-  name        String
+  id String @id @default(cuid())
+  name String
   description String?
-  creatorId   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  creatorId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  creator  User          @relation("GroupCreator", fields: [creatorId], references: [id])
-  members  GroupMember[]
+  creator User @relation("GroupCreator", fields: [creatorId], references: [id])
+  members GroupMember[]
   messages Message[]
 }
 
 model GroupMember {
-  id        String   @id @default(cuid())
-  groupId   String
-  userId    String
-  role      GroupRole @default(MEMBER)
-  joinedAt  DateTime @default(now())
+  id String @id @default(cuid())
+  groupId String
+  userId String
+  role GroupRole @default(MEMBER)
+  joinedAt DateTime @default(now())
   lastReadAt DateTime @default(now())
   color String? // hex color, scoped per-group
 
   group Group @relation(fields: [groupId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([groupId, userId])
 }
@@ -103,25 +105,25 @@ enum MessageType {
 }
 
 model FileTransfer {
-  id           String         @id @default(cuid())
-  senderId     String
-  receiverId   String
-  fileName     String         // original filename shown to recipient
-  fileSize     Int            // bytes, for display
-  mimeType     String
-  r2Key        String         // object key in R2 bucket
-  status       TransferStatus @default(PENDING)
-  createdAt    DateTime       @default(now())
-  expiresAt    DateTime       // R2 object TTL (e.g. 7 days)
+  id String @id @default(cuid())
+  senderId String
+  receiverId String
+  fileName String // original filename shown to recipient
+  fileSize Int // bytes, for display
+  mimeType String
+  r2Key String // object key in R2 bucket
+  status TransferStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  expiresAt DateTime // R2 object TTL (e.g. 7 days)
   downloadedAt DateTime?
 
-  sender   User @relation("TransferSender",   fields: [senderId],   references: [id])
+  sender User @relation("TransferSender", fields: [senderId], references: [id])
   receiver User @relation("TransferReceiver", fields: [receiverId], references: [id])
 }
 
 enum TransferStatus {
-  PENDING      // uploaded to R2, waiting for recipient
-  DOWNLOADED   // recipient accepted and downloaded
-  DECLINED     // recipient declined, R2 object deleted
-  EXPIRED      // TTL passed, R2 object cleaned up
+  PENDING // uploaded to R2, waiting for recipient
+  DOWNLOADED // recipient accepted and downloaded
+  DECLINED // recipient declined, R2 object deleted
+  EXPIRED // TTL passed, R2 object cleaned up
 }

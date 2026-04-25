@@ -38,7 +38,7 @@ function Index() {
       <section className="space-y-6">
         <AsciiLogo className="mx-auto md:mx-0" />
 
-        {/* Login banner — green box like screenshot */}
+        {/* Login banner — #50fa7b box like screenshot */}
         <div className="tui-box px-4 py-2.5 font-mono text-sm overflow-hidden text-ellipsis whitespace-nowrap">
           <span className="text-accent">Logged in as:</span>{" "}
           <span className="text-primary truncate">developer</span>

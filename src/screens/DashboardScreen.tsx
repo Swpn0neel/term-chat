@@ -112,6 +112,8 @@ export default function DashboardScreen({
               value: 'manage-friends',
               hint: friendNotifications > 0 ? `${friendNotifications} new` : undefined
             },
+            { label: '', value: 'sep1', isSpacer: true },
+            { label: '', value: 'sep2', isSpacer: true },
             { label: 'Sign Out', value: 'auth' }
           ]
         };
@@ -125,8 +127,8 @@ export default function DashboardScreen({
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor="green" paddingX={1} marginTop={1}>
-            <Text color="green">Logged in as: </Text>
+          <Box borderStyle="single" borderColor="#50fa7b" paddingX={1} marginTop={1}>
+            <Text color="#50fa7b">Logged in as: </Text>
             <Text bold>{user?.username ?? 'Guest'}</Text>
           </Box>
         </Box>

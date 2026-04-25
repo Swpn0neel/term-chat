@@ -69,7 +69,7 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor="green" paddingX={1} marginTop={1}>
+          <Box borderStyle="single" borderColor="#50fa7b" paddingX={1} marginTop={1}>
             <Text bold>Pending Requests</Text>
           </Box>
         </Box>

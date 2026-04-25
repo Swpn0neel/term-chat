@@ -2,49 +2,125 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import "dotenv/config";
 import { prisma } from '@/lib/prisma';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ 
-  model: 'gemini-2.5-flash',
-  systemInstruction: 'You are TermChat AI, a friendly and warm assistant integrated into a terminal chat application. Your responses must be minimal, clean plain text ONLY. DO NOT use markdown symbols, bolding (**), italics (_), bullet points, or any other text decorations. Keep it simple, friendly, and readable in a basic terminal.'
-});
+const SYSTEM_INSTRUCTION = 'You are TermChat AI, a friendly and warm assistant integrated into a terminal chat application. Your responses MUST be total plain text ONLY. ABSOLUTELY NO markdown, no bolding (**), no italics (_), and no lists (no numbered lists, no bullet points). If you have multiple points to make, write them as consecutive, well-structured paragraphs of plain text. Keep it minimal, friendly, and extremely readable in a basic terminal without any special characters or decorations.';
+
+import { AVAILABLE_MODELS, ModelId } from '@/lib/models';
 
 export interface ChatMessage {
   role: 'user' | 'model';
   parts: { text: string }[];
 }
 
+export interface StreamCallbacks {
+  onChunk: (text: string) => void;
+  onDone: (fullText: string) => void;
+}
+
 export class AIService {
-  /**
-   * Start a new stateful chat session
-   */
-  static startChatSession(history: ChatMessage[] = []) {
-    return model.startChat({
-      history,
+  static getModelInfo(modelId: string) {
+    return AVAILABLE_MODELS.find(m => m.id === modelId) ?? AVAILABLE_MODELS[0];
+  }
+
+  private static getDefaultModel(): ModelId {
+    return 'gemini-2.5-flash';
+  }
+
+  private static makeModel(apiKey: string, modelId?: string) {
+    const model = modelId || this.getDefaultModel();
+    const genAI = new GoogleGenerativeAI(apiKey);
+    return genAI.getGenerativeModel({
+      model,
+      systemInstruction: SYSTEM_INSTRUCTION,
     });
   }
 
+  private static buildHistory(history: ChatMessage[]) {
+    return history
+      .filter(m => {
+        if (m.role === 'user') return true;
+        const text = m.parts[0].text;
+        // Exclude system and error messages from context
+        if (text.startsWith('System:')) return false;
+        if (text.startsWith('Switched to ')) return false;
+        if (text.startsWith('Current model:')) return false;
+        if (text.startsWith('Unknown model ')) return false;
+        if (text.startsWith('Use /model')) return false;
+        if (text === 'An error occurred in the generation of the response.') return false;
+        if (text.startsWith("You haven't set your Gemini API key")) return false;
+        if (text.startsWith('Your API key seems invalid')) return false;
+        return true;
+      })
+      .map(m => ({
+        role: m.role,
+        parts: m.parts,
+      }));
+  }
+
   /**
-   * Send a message and get a response from Gemini
+   * Streaming: sends message and calls onChunk per token until done.
    */
-  static async sendChatMessage(content: string, history: ChatMessage[] = [], userApiKey?: string) {
+  static async streamChatMessage(
+    content: string,
+    history: ChatMessage[],
+    userApiKey?: string,
+    modelId?: string,
+    callbacks?: StreamCallbacks
+  ) {
     const apiKey = userApiKey || process.env.GEMINI_API_KEY;
-    
     if (!apiKey || apiKey === 'your-gemini-key') {
       throw new Error('NO_KEY');
     }
 
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const userModel = genAI.getGenerativeModel({ 
-        model: 'gemini-2.5-flash',
-        systemInstruction: 'You are TermChat AI, a friendly and warm assistant integrated into a terminal chat application. Your responses MUST be total plain text ONLY. ABSOLUTELY NO markdown, no bolding (**), no italics (_), and no lists (no numbered lists, no bullet points). If you have multiple points to make, write them as consecutive, well-structured paragraphs of plain text. Keep it minimal, friendly, and extremely readable in a basic terminal without any special characters or decorations.'
+      const userModel = genAI.getGenerativeModel({
+        model: modelId || this.getDefaultModel(),
+        systemInstruction: SYSTEM_INSTRUCTION,
       });
 
       const chat = userModel.startChat({
-        history,
-        generationConfig: {
-          maxOutputTokens: 2048,
-        },
+        history: this.buildHistory(history),
+        generationConfig: { maxOutputTokens: 4096 },
+      });
+
+      const result = await chat.sendMessageStream(content);
+      let fullText = '';
+
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        fullText += chunkText;
+        callbacks?.onChunk(chunkText);
+      }
+
+      callbacks?.onDone(fullText);
+      return fullText;
+    } catch (err: any) {
+      if (err.status === 403 || err.message?.includes('API key')) {
+        throw new Error('INVALID_KEY');
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Non-streaming fallback
+   */
+  static async sendChatMessage(
+    content: string,
+    history: ChatMessage[] = [],
+    userApiKey?: string,
+    modelId?: string
+  ) {
+    const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'your-gemini-key') {
+      throw new Error('NO_KEY');
+    }
+
+    try {
+      const userModel = this.makeModel(apiKey, modelId);
+      const chat = userModel.startChat({
+        history: this.buildHistory(history),
+        generationConfig: { maxOutputTokens: 4096 },
       });
       const result = await chat.sendMessage(content);
       return result.response.text();
@@ -56,62 +132,54 @@ export class AIService {
     }
   }
 
-  /**
-   * Update user's personal Gemini API key
-   */
   static async updateApiKey(userId: string, apiKey: string) {
     await prisma.user.update({
       where: { id: userId },
-      data: { geminiApiKey: apiKey.trim() }
+      data: { geminiApiKey: apiKey.trim() },
     });
   }
 
-  /**
-   * Fetch AI chat history from DB
-   */
   static async getHistory(userId: string): Promise<ChatMessage[]> {
     const messages = await prisma.message.findMany({
       where: {
         senderId: userId,
         isAIChat: true,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'asc' },
     });
 
-    // Reorder to ascending for UI and map to Gemini format
-    return messages.reverse().map(m => ({
+    return messages.map(m => ({
       role: m.isAIResponse ? 'model' : 'user',
-      parts: [{ text: m.content }]
+      parts: [{ text: m.content }],
     }));
   }
 
   /**
-   * Save a message and enforce the 50-message limit
+   * Save a user or AI message to the DB, storing the model id on AI responses.
    */
-  static async saveMessage(userId: string, content: string, isAIResponse: boolean) {
-    // Save the new message - cleanup logic removed as per user request
+  static async saveMessage(
+    userId: string,
+    content: string,
+    isAIResponse: boolean,
+    model?: string,
+    title?: string
+  ) {
     await prisma.message.create({
       data: {
         senderId: userId,
-        receiverId: userId, // Self-referential for AI chat
+        receiverId: userId,
         content: content.trim(),
         isAIChat: true,
-        isAIResponse
-      }
+        isAIResponse,
+        model: isAIResponse ? model : undefined,
+        title: isAIResponse ? title : undefined,
+      },
     });
   }
 
-  /**
-   * Delete all AI history for a user
-   */
   static async clearHistory(userId: string) {
     await prisma.message.deleteMany({
-      where: {
-        senderId: userId,
-        isAIChat: true
-      }
+      where: { senderId: userId, isAIChat: true },
     });
   }
 }

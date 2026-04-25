@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * TUI panel — green-bordered box matching the TermChat CLI aesthetic.
- * Optional title rendered as a green prompt prefix inside the top of the box.
+ * TUI panel — #50fa7b-bordered box matching the TermChat CLI aesthetic.
+ * Optional title rendered as a #50fa7b prompt prefix inside the top of the box.
  */
 export function CrtScreen({
   children,
