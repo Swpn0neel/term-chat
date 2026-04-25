@@ -117,7 +117,7 @@ export default function InboxScreen({ user, navigate }: any) {
                 options={transfers.map(t => ({
                   label: t.fileName,
                   value: t.id,
-                  hint: `${prettyBytes(t.fileSize)} from ${t.sender.username}`
+                  hint: `${t.sender.username} ● ${prettyBytes(t.fileSize)}`
                 }))}
                 onSubmit={handleTransferSelect}
               />

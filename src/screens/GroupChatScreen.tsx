@@ -277,6 +277,15 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                 allLines.push(<Box key={`msg-gap-${msg.id}`} height={1} />);
               });
 
+              if (isSending) {
+                allLines.push(
+                  <Box key="sending" marginTop={0}>
+                    <Text dimColor italic>Sending...</Text>
+                  </Box>
+                );
+                allLines.push(<Box key="sending-gap" height={1} />);
+              }
+
               const maxLines = Math.max(1, chatHeight);
               const totalLines = allLines.length;
               const maxOffset = Math.max(0, totalLines - maxLines);
@@ -287,12 +296,6 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
 
               return allLines.slice(start, end);
             })()}
-
-            {isSending && (
-              <Box marginTop={1}>
-                <Text dimColor italic>Sending...</Text>
-              </Box>
-            )}
           </Box>
         )}
       </AppShell.Content>

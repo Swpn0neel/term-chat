@@ -42,7 +42,7 @@ export default function GroupListScreen({ user, navigate, unreadCounts = {} }: a
       return {
         label: `${g.name}${unreadCount > 0 ? ' ●' : ''}`,
         value: g.id,
-        hint: `${unreadCount > 0 ? `${unreadCount} new | ` : ''}${g.members.length} members`
+        hint: `${unreadCount > 0 ? `${unreadCount} new ● ` : ''}${g.members.length} members`
       };
     }),
     // Spacer if there are groups

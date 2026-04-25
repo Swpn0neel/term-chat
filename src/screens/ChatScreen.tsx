@@ -231,9 +231,17 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                   );
                 });
                 
-                // Add vertical gap between messages
                 allLines.push(<Box key={`msg-gap-${msg.id}`} height={1} flexShrink={0} />);
               });
+
+              if (isSending) {
+                allLines.push(
+                  <Box key="sending" marginTop={0}>
+                    <Text dimColor italic>Sending...</Text>
+                  </Box>
+                );
+                allLines.push(<Box key="sending-gap" height={1} />);
+              }
 
               // Slicing logic
               const maxLines = Math.max(1, chatHeight);
@@ -246,12 +254,6 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
 
               return allLines.slice(start, end);
             })()}
-
-            {isSending && (
-              <Box marginTop={1}>
-                <Text dimColor italic>Sending...</Text>
-              </Box>
-            )}
           </Box>
         )}
       </AppShell.Content>

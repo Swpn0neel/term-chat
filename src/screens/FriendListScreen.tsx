@@ -78,14 +78,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
                 return {
                   label: `${f.username}${count > 0 ? ' ●' : ''}`,
                   value: f.id,
-                  hint: (
-                    <Text>
-                      <Text color={isTrulyOnline ? '#50fa7b' : 'gray'}>
-                        {isTrulyOnline ? '● Online' : `○ Offline (last seen ${lastSeenStr})`}
-                      </Text>
-                      {count > 0 && <Text dimColor> ({count} new)</Text>}
-                    </Text>
-                  ) as any
+                  hint: `${count > 0 ? `${count} new ● ` : ''}${isTrulyOnline ? 'Online' : `Offline (last seen ${lastSeenStr})`}`
                 };
               })}
               onSubmit={(friendId) => navigate('chat', { friendId })}

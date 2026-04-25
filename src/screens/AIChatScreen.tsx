@@ -399,13 +399,17 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
       });
     }
 
-    if (isThinking && !streamText) {
-      allLines.push(
-        <Box key="thinking" gap={1}>
-          <Spinner label="TermChat AI is thinking..." />
-        </Box>
-      );
-    }
+      if (isThinking && !streamText) {
+        allLines.push(
+          <Box key="thinking" gap={1}>
+            <Spinner label="TermChat AI is thinking..." />
+          </Box>
+        );
+      }
+      
+      // Add gap after the active AI block
+      allLines.push(<Box key="ai-active-gap" height={1} />);
+      
   }
 
   const maxLines = Math.max(1, chatHeight);

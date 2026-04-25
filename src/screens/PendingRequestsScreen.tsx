@@ -90,7 +90,7 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
               options={requests.map(req => ({
                 label: req.sender.username,
                 value: req.id,
-                hint: new Date(req.createdAt).toLocaleDateString()
+                hint: `New ● ${new Date(req.createdAt).toLocaleDateString()}`
               }))}
               value={selectedIds}
               onChange={setSelectedIds}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useStdout } from 'ink';
 import { useTheme } from '@/lib/theme';
 
 export interface TitleProps {
@@ -58,10 +58,28 @@ const FALLBACK = ["████", "█  █", "████", "█  █", "█  
 
 export function Title({ children, color }: TitleProps) {
   const theme = useTheme();
+  const { stdout } = useStdout();
   const resolvedColor = color ?? theme.colors.primary;
   
   const chars = children.split('');
   const rows = 6;
+
+  // Calculate approximate width of ASCII logo
+  const totalWidth = chars.reduce((acc, ch) => {
+    const charRows = FONT[ch] ?? FALLBACK;
+    return acc + (charRows[0]?.length ?? 0);
+  }, 0);
+
+  // If terminal is too narrow, use simple text with a border
+  if (stdout?.columns && stdout.columns < totalWidth + 10) {
+    return (
+      <Box borderStyle="double" borderColor={resolvedColor} paddingX={2} paddingY={0}>
+        <Text color={resolvedColor} bold>
+          {children.toUpperCase()}
+        </Text>
+      </Box>
+    );
+  }
 
   return (
     <Box flexDirection="column">

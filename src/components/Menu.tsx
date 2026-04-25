@@ -53,7 +53,7 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
   });
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" width="100%">
       {/* Question / Label */}
       <Box gap={1}>
         <Text color={theme.colors.primary} bold>◆ </Text>
@@ -68,32 +68,30 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
         const isActive = index === activeIndex;
         
         const optionBox = option.isSpacer ? (
-          <Box key={option.value} gap={1}>
-            <Text color="gray">  │</Text>
-            <Text color="gray">  </Text>
-            <Text color="gray" italic dimColor>{option.label}</Text>
+          <Box key={option.value} flexDirection="row">
+            <Box flexShrink={0} width={4}>
+              <Text color="gray">  │ </Text>
+            </Box>
+            <Text color="gray" italic dimColor wrap="truncate-end">{option.label}</Text>
           </Box>
         ) : (
-          <Box key={option.value} gap={1}>
-            <Text color="gray">  │</Text>
-            <Text color={isActive ? theme.colors.primary : "gray"}>
-              {isActive ? "●" : "○"}
-            </Text>
-            <Text color={isActive ? "#50fa7b" : "gray"}>
-              {option.label}
-            </Text>
+          <Box key={option.value} flexDirection="row" width="100%">
+            <Box flexShrink={0} width={8}>
+              <Text color="gray">  │ </Text>
+              <Text color={isActive ? theme.colors.primary : "gray"}>
+                {isActive ? "● " : "○ "}
+              </Text>
+            </Box>
+            <Box flexGrow={1}>
+              <Text color={isActive ? "#50fa7b" : "gray"} wrap="truncate-end">
+                {option.label}
+              </Text>
+            </Box>
             {option.hint && (
-              <Box gap={1}>
-                {typeof option.hint === 'string' ? (
-                  <Text color="gray" dimColor>
-                    {isActive ? `— ${option.hint}` : `(${option.hint})`}
-                  </Text>
-                ) : (
-                  <Box gap={1}>
-                    {isActive && <Text color="gray">—</Text>}
-                    {option.hint}
-                  </Box>
-                )}
+              <Box flexShrink={0} marginLeft={2}>
+                <Text color="gray" dimColor>
+                  {option.hint}
+                </Text>
               </Box>
             )}
           </Box>
@@ -161,7 +159,7 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
   });
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" width="100%">
       {/* Question / Label */}
       <Box gap={1}>
         <Text color={theme.colors.primary} bold>◆ </Text>
@@ -177,35 +175,33 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
         const isSelected = value.includes(option.value);
 
         const optionBox = option.isSpacer ? (
-          <Box key={option.value} gap={1}>
-            <Text color="gray">  │</Text>
-            <Text color="gray">    </Text>
-            <Text color="gray" italic dimColor>{option.label}</Text>
+          <Box key={option.value} flexDirection="row">
+            <Box flexShrink={0} width={4}>
+              <Text color="gray">  │ </Text>
+            </Box>
+            <Text color="gray" italic dimColor wrap="truncate-end">{option.label}</Text>
           </Box>
         ) : (
-          <Box key={option.value} gap={1}>
-            <Text color="gray">  │</Text>
-            <Text color={isActive ? theme.colors.primary : "gray"}>
-              {isActive ? "●" : " "}
-            </Text>
-            <Text color={isSelected ? theme.colors.primary : "gray"} key={isSelected ? 's' : 'u'}>
-              {isSelected ? "◼" : "◻"}
-            </Text>
-            <Text color={isActive ? "#50fa7b" : "gray"}>
-              {option.label}
-            </Text>
+          <Box key={option.value} flexDirection="row">
+            <Box flexShrink={0} width={10}>
+              <Text color="gray">  │ </Text>
+              <Text color={isActive ? theme.colors.primary : "gray"}>
+                {isActive ? "● " : "  "}
+              </Text>
+              <Text color={isSelected ? theme.colors.primary : "gray"} key={isSelected ? 's' : 'u'}>
+                {isSelected ? "◼ " : "◻ "}
+              </Text>
+            </Box>
+            <Box flexGrow={1}>
+              <Text color={isActive ? "#50fa7b" : "gray"} wrap="truncate-end">
+                {option.label}
+              </Text>
+            </Box>
             {option.hint && (
-              <Box gap={1}>
-                {typeof option.hint === 'string' ? (
-                  <Text color="gray" dimColor>
-                    {isActive ? `— ${option.hint}` : `(${option.hint})`}
-                  </Text>
-                ) : (
-                  <Box gap={1}>
-                    {isActive && <Text color="gray">—</Text>}
-                    {option.hint}
-                  </Box>
-                )}
+              <Box flexShrink={0} marginLeft={2}>
+                <Text color="gray" dimColor>
+                  {option.hint}
+                </Text>
               </Box>
             )}
           </Box>
