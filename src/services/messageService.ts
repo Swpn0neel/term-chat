@@ -127,4 +127,23 @@ export class MessageService {
       },
     });
   }
+  /**
+   * Edit a message by its ID, ensuring the sender is the one editing it
+   */
+  static async editMessage(messageId: string, senderId: string, content: string) {
+    if (!content.trim()) {
+      throw new Error('Message content cannot be empty.');
+    }
+
+    return await prisma.message.updateMany({
+      where: {
+        id: messageId,
+        senderId,
+      },
+      data: {
+        content: content.trim(),
+        isEdited: true,
+      },
+    });
+  }
 }

@@ -139,6 +139,31 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
           await fetchConversation();
           return;
         }
+        if (cmd === '/edit') {
+          const parts = userMessage.split(' ');
+          let n = parseInt(parts[1]);
+          let newContent;
+
+          if (isNaN(n)) {
+            n = 1;
+            newContent = parts.slice(1).join(' ');
+          } else {
+            newContent = parts.slice(2).join(' ');
+          }
+          
+          if (newContent) {
+            const myMessages = messages.filter(m => m.senderId === user.id);
+            const targetIndex = myMessages.length - n;
+            
+            if (targetIndex >= 0 && targetIndex < myMessages.length) {
+              const msgToEdit = myMessages[targetIndex];
+              await MessageService.editMessage(msgToEdit.id, user.id, newContent);
+            }
+          }
+          setNewMessage('');
+          await fetchConversation();
+          return;
+        }
       } catch (err: any) {
         setMessages(prev => [...prev, {
           id: 'error-' + Date.now(),
@@ -262,7 +287,8 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                         <>
                           <Text dimColor color="gray">[{time}] </Text>
                           <Text color={userColor} bold>
-                            {isMe ? 'You' : msg.sender.username}:
+                            {isMe ? 'You' : msg.sender.username}
+                            {msg.isEdited && <Text italic dimColor> (edited)</Text>}:
                           </Text>
                         </>
                       ) : (
@@ -310,6 +336,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
       <AppShell.Hints items={[
         '/color: change color',
         '/delete [n|all]: Delete',
+        '/edit [n] [msg]: Edit',
         'Enter: Send',
         '↑↓: Scroll',
         'Esc: Back',

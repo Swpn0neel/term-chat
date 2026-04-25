@@ -115,6 +115,35 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
       return;
     }
 
+    // Handle edit commands
+    if (userMessage.toLowerCase().startsWith('/edit')) {
+      const parts = userMessage.split(' ');
+      let n = parseInt(parts[1]);
+      let newContent;
+
+      if (isNaN(n)) {
+        n = 1;
+        newContent = parts.slice(1).join(' ');
+      } else {
+        newContent = parts.slice(2).join(' ');
+      }
+      
+      try {
+        if (newContent) {
+          const myMessages = messages.filter(m => m.senderId === user.id);
+          const targetIndex = myMessages.length - n;
+          
+          if (targetIndex >= 0 && targetIndex < myMessages.length) {
+            const msgToEdit = myMessages[targetIndex];
+            await MessageService.editMessage(msgToEdit.id, user.id, newContent);
+          }
+        }
+        setNewMessage('');
+        await fetchConversation();
+      } catch (err) {}
+      return;
+    }
+
     // Handle color commands
     if (userMessage.startsWith('/')) {
       const parts = userMessage.split(' ');
@@ -247,7 +276,8 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                         <>
                           <Text dimColor color="gray">[{time}] </Text>
                           <Text color={isMe ? myColor : friendColor} bold>
-                            {isMe ? 'You' : msg.sender.username}:
+                            {isMe ? 'You' : msg.sender.username}
+                            {msg.isEdited && <Text italic dimColor> (edited)</Text>}:
                           </Text>
                         </>
                       ) : (
@@ -298,7 +328,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           borderColor="#50fa7b"
         />
       )}
-      <AppShell.Hints items={['/color: change color', '/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
+      <AppShell.Hints items={['/color: change color', '/delete [n|all]: Delete', '/edit [n] [msg]: Edit', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
     </AppShell>
   );
 }

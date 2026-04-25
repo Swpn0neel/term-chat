@@ -5,8 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -62,6 +60,7 @@ model Message {
   isAIChat Boolean @default(false)
   isAIResponse Boolean @default(false)
   isRead Boolean @default(false)
+  isEdited Boolean @default(false)
   createdAt DateTime @default(now())
   title String?
   model String?
