@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import pkg_prisma from '@/generated/client';
-const { Status } = pkg_prisma;
+import { Status } from '@/generated/client';
+import { getRandomColor, getNextColor } from '@/lib/groupColors';
 
 export class SocialService {
   /**
@@ -80,9 +80,15 @@ export class SocialService {
    */
   static async respondToRequest(requestId: string, action: 'ACCEPT' | 'DECLINE') {
     if (action === 'ACCEPT') {
+      const color1 = getRandomColor();
+      const color2 = getRandomColor(color1);
       return await prisma.friendRequest.update({
         where: { id: requestId },
-        data: { status: Status.ACCEPTED },
+        data: { 
+          status: Status.ACCEPTED,
+          senderColor: color1,
+          receiverColor: color2
+        },
       });
     } else {
       return await prisma.friendRequest.delete({
@@ -96,10 +102,20 @@ export class SocialService {
    */
   static async respondToMultipleRequests(requestIds: string[], action: 'ACCEPT' | 'DECLINE') {
     if (action === 'ACCEPT') {
-      return await prisma.friendRequest.updateMany({
-        where: { id: { in: requestIds } },
-        data: { status: Status.ACCEPTED },
-      });
+      const results = [];
+      for (const id of requestIds) {
+        const color1 = getRandomColor();
+        const color2 = getRandomColor(color1);
+        results.push(await prisma.friendRequest.update({
+          where: { id },
+          data: { 
+            status: Status.ACCEPTED,
+            senderColor: color1,
+            receiverColor: color2
+          },
+        }));
+      }
+      return results;
     } else {
       return await prisma.friendRequest.deleteMany({
         where: { id: { in: requestIds } },
@@ -220,5 +236,32 @@ export class SocialService {
         isRead: true
       }
     });
+  }
+
+  /**
+   * Change a user's color for a specific friend chat
+   */
+  static async changeFriendColor(userId: string, friendId: string) {
+    const friendship = await this.getFriendship(userId, friendId);
+    if (!friendship) throw new Error('Friendship not found');
+
+    const isSender = friendship.senderId === userId;
+    const currentColor = isSender ? friendship.senderColor : friendship.receiverColor;
+    const otherColor = isSender ? friendship.receiverColor : friendship.senderColor;
+
+    let newColor = getNextColor(currentColor);
+    // Ensure it's different from the other person
+    if (newColor === otherColor) {
+      newColor = getNextColor(newColor);
+    }
+
+    await prisma.friendRequest.update({
+      where: { id: friendship.id },
+      data: {
+        [isSender ? 'senderColor' : 'receiverColor']: newColor
+      }
+    });
+
+    return newColor;
   }
 }

@@ -5,6 +5,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -37,6 +39,9 @@ model FriendRequest {
 
   sender User @relation("Sender", fields: [senderId], references: [id])
   receiver User @relation("Receiver", fields: [receiverId], references: [id])
+
+  senderColor String?
+  receiverColor String?
 
   @@unique([senderId, receiverId])
 }

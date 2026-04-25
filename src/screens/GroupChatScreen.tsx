@@ -88,7 +88,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
       const arg = parts[1];
 
       try {
-        if (cmd === '/changecolour' || cmd === '/changecolor') {
+        if (cmd === '/color' || cmd === '/changecolor' || cmd === '/changecolour') {
           await GroupService.changeMemberColor(groupId, user.id);
           await fetchGroupInfo();
           setMessages(prev => [...prev, {
@@ -308,11 +308,11 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
         borderColor="#50fa7b"
       />
       <AppShell.Hints items={[
+        '/color: change color',
+        '/delete [n|all]: Delete',
         'Enter: Send',
         '↑↓: Scroll',
         'Esc: Back',
-        '/changeColour: Change color',
-        '/delete [n|all]: Delete',
         ...(group?.creatorId === user.id ? ['/add [user]', '/remove [user]'] : []),
         '/leave'
       ]} />

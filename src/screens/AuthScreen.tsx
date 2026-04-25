@@ -116,7 +116,9 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
         <AppShell.Header>
           <Box flexDirection="column" padding={1}>
             <Title>TermChat</Title>
-            <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
+            <Box marginTop={1}>
+              <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
+            </Box>
           </Box>
         </AppShell.Header>
         <AppShell.Content>
@@ -133,7 +135,9 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
+          <Box marginTop={1}>
+            <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
+          </Box>
         </Box>
       </AppShell.Header>
 

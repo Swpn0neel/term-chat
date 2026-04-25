@@ -21,6 +21,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isFriend, setIsFriend] = useState(true);
+  const [friendship, setFriendship] = useState<any>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   
   const { stdout } = useStdout();
@@ -34,8 +35,9 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
       });
       setFriend(data);
       
-      const friendship = await SocialService.getFriendship(user.id, friendId);
-      setIsFriend(!!friendship);
+      const fs = await SocialService.getFriendship(user.id, friendId);
+      setIsFriend(!!fs);
+      setFriendship(fs);
     } catch (err) {}
   }, [user.id, friendId]);
 
@@ -111,6 +113,27 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
         // Silently fail or log for debug
       }
       return;
+    }
+
+    // Handle color commands
+    if (userMessage.startsWith('/')) {
+      const parts = userMessage.split(' ');
+      const cmd = parts[0].toLowerCase();
+      if (cmd === '/color' || cmd === '/changecolor' || cmd === '/changecolour') {
+        try {
+          await SocialService.changeFriendColor(user.id, friendId);
+          await fetchFriendInfo();
+          setMessages(prev => [...prev, {
+            id: 'color-' + Date.now(),
+            content: 'Color changed! It will take effect on your next message.',
+            type: 'SYSTEM',
+            createdAt: new Date(),
+            sender: { username: 'System' }
+          }]);
+          setNewMessage('');
+        } catch (err: any) {}
+        return;
+      }
     }
 
     setIsSending(true);
@@ -214,12 +237,16 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                 const contentLines = wrappedContent.split('\n');
 
                 contentLines.forEach((lineText, idx) => {
+                  const isMeSender = friendship?.senderId === user.id;
+                  const myColor = (isMeSender ? friendship?.senderColor : friendship?.receiverColor) || '#50fa7b';
+                  const friendColor = (isMeSender ? friendship?.receiverColor : friendship?.senderColor) || theme.colors.primary;
+
                   allLines.push(
                     <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
                       {idx === 0 ? (
                         <>
                           <Text dimColor color="gray">[{time}] </Text>
-                          <Text color={isMe ? '#50fa7b' : theme.colors.primary} bold>
+                          <Text color={isMe ? myColor : friendColor} bold>
                             {isMe ? 'You' : msg.sender.username}:
                           </Text>
                         </>
@@ -271,7 +298,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           borderColor="#50fa7b"
         />
       )}
-      <AppShell.Hints items={['/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
+      <AppShell.Hints items={['/color: change color', '/delete [n|all]: Delete', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
     </AppShell>
   );
 }
