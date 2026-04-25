@@ -40,6 +40,7 @@ ai-debug.log
 .session.json
 scratch/
 .planning/
+.claude/
 PLAN.md
 
 # Editor

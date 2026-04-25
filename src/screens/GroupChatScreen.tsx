@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useStdout } from 'ink';
 import wrapAnsi from 'wrap-ansi';
 import { useInput, useTheme } from '@/lib/theme';
@@ -19,7 +19,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
   const [isSending, setIsSending] = useState(false);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [onlineCount, setOnlineCount] = useState(0);
-  
+
   const { stdout } = useStdout();
 
   const fetchGroupInfo = useCallback(async () => {
@@ -30,7 +30,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
         return;
       }
       setGroup(data);
-      
+
       // Check if user is still a member
       const isMember = data.members.some((m: any) => m.user.id === user.id);
       if (!isMember) {
@@ -81,8 +81,6 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
     const userMessage = newMessage.trim();
     if (!userMessage || isSending) return;
 
-
-
     // Handle group commands
     if (userMessage.startsWith('/')) {
       const parts = userMessage.split(' ');
@@ -90,13 +88,26 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
       const arg = parts[1];
 
       try {
+        if (cmd === '/changecolour' || cmd === '/changecolor') {
+          await GroupService.changeMemberColor(groupId, user.id);
+          await fetchGroupInfo();
+          setMessages(prev => [...prev, {
+            id: 'color-' + Date.now(),
+            content: 'Color changed! It will take effect on your next message.',
+            type: 'SYSTEM',
+            createdAt: new Date(),
+            sender: { username: 'System' }
+          }]);
+          setNewMessage('');
+          return;
+        }
         if (cmd === '/add' && arg) {
           if (group.creatorId !== user.id) throw new Error('Only creator can add members.');
           await GroupService.addMember(groupId, arg, user.id);
           setNewMessage('');
           await fetchConversation();
           return;
-        } 
+        }
         if (cmd === '/remove' && arg) {
           if (group.creatorId !== user.id) throw new Error('Only creator can remove members.');
           await GroupService.removeMember(groupId, arg, user.id);
@@ -116,10 +127,9 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
           } else {
             const n = subArg ? parseInt(subArg) : 1;
             const myMessages = messages.filter(m => m.senderId === user.id);
-            
-            // Get the Nth last message
+
             const targetIndex = myMessages.length - n;
-            
+
             if (targetIndex >= 0 && targetIndex < myMessages.length) {
               const msgToDelete = myMessages[targetIndex];
               await MessageService.deleteMessage(msgToDelete.id, user.id);
@@ -130,7 +140,6 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
           return;
         }
       } catch (err: any) {
-        // Maybe show error in chat as a temporary system message
         setMessages(prev => [...prev, {
           id: 'error-' + Date.now(),
           content: `Error: ${err.message}`,
@@ -149,10 +158,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
 
     try {
       await MessageService.sendGroupMessage(user.id, groupId, userMessage);
-      // Removed the immediate fetchConversation() to prevent flicker, 
-      // the polling or the local state update (if we had it) would handle it.
-      // Actually, keep it but ensure it doesn't trigger loading state.
-      await fetchConversation(); 
+      await fetchConversation();
     } catch (err) {
       setNewMessage(userMessage);
     } finally {
@@ -198,6 +204,13 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
               const height = stdout?.rows || 24;
               const chatHeight = Math.max(5, height - 12);
 
+              // Build per-sender color map from group members
+              // Fallback to theme.primary for null colors (backward compat with existing members)
+              const senderColorMap: Record<string, string> = {};
+              group?.members?.forEach((m: any) => {
+                senderColorMap[m.user.id] = m.color ?? theme.colors.primary;
+              });
+
               let lastDate = '';
               const allLines: React.ReactNode[] = [];
 
@@ -216,7 +229,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                 if (msg.type === 'SYSTEM') {
                   const isJoin = msg.content.includes('added') || msg.content.includes('created');
                   const isLeave = msg.content.includes('left') || msg.content.includes('removed');
-                  
+
                   allLines.push(
                     <Box key={msg.id} width="100%" justifyContent="center" paddingY={0}>
                       <Text color={isJoin ? 'green' : isLeave ? 'red' : 'gray'} italic>
@@ -228,10 +241,11 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                 }
 
                 const isMe = msg.senderId === user.id;
+                const msgColor = senderColorMap[msg.senderId] ?? theme.colors.primary;
                 const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const prefix = `[${time}] ${isMe ? 'You' : msg.sender.username}: `;
                 const prefixLen = prefix.length;
-                
+
                 const wrappedContent = wrapAnsi(msg.content, Math.max(10, width - prefixLen - 6), { hard: true, trim: false });
                 const contentLines = wrappedContent.split('\n');
 
@@ -241,7 +255,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                       {idx === 0 ? (
                         <>
                           <Text dimColor color="gray">[{time}] </Text>
-                          <Text color={isMe ? '#50fa7b' : theme.colors.primary} bold>
+                          <Text color={msgColor} bold>
                             {isMe ? 'You' : msg.sender.username}:
                           </Text>
                         </>
@@ -282,9 +296,10 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
         borderColor="green"
       />
       <AppShell.Hints items={[
-        'Enter: Send', 
-        '↑↓: Scroll', 
+        'Enter: Send',
+        '↑↓: Scroll',
         'Esc: Back',
+        '/changeColour: Pick new color',
         '/delete [n|all]: Delete',
         ...(group?.creatorId === user.id ? ['/add [user]', '/remove [user]'] : []),
         '/leave'

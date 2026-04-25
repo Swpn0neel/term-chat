@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import pkg_prisma from '@/generated/client';
+import { getRandomColor, getNextColor } from '@/lib/groupColors';
 const { GroupRole, MessageType } = pkg_prisma;
 
 export class GroupService {
@@ -7,15 +8,14 @@ export class GroupService {
    * Create a new group with a name, creator, and initial members
    */
   static async createGroup(name: string, creatorId: string, memberIds: string[]) {
-    // 1. Create the group and members in a transaction
     const group = await prisma.group.create({
       data: {
         name,
         creatorId,
         members: {
           create: [
-            { userId: creatorId, role: GroupRole.ADMIN },
-            ...memberIds.map(id => ({ userId: id, role: GroupRole.MEMBER }))
+            { userId: creatorId, role: GroupRole.ADMIN, color: getRandomColor() },
+            ...memberIds.map(id => ({ userId: id, role: GroupRole.MEMBER, color: getRandomColor() }))
           ]
         }
       }
@@ -125,7 +125,7 @@ export class GroupService {
     if (existing) throw new Error('User is already in the group');
 
     await prisma.groupMember.create({
-      data: { groupId, userId: user.id }
+      data: { groupId, userId: user.id, color: getRandomColor() }
     });
 
     await prisma.message.create({
@@ -253,5 +253,21 @@ export class GroupService {
       }
     }
     return counts;
+  }
+
+  /**
+   * Assign the next color in the pool to a member. Used by /changeColour.
+   */
+  static async changeMemberColor(groupId: string, userId: string) {
+    const member = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId, userId } },
+      select: { color: true }
+    });
+    const newColor = getNextColor(member?.color ?? null);
+    await prisma.groupMember.update({
+      where: { groupId_userId: { groupId, userId } },
+      data: { color: newColor }
+    });
+    return newColor;
   }
 }

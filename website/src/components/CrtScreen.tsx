@@ -19,7 +19,7 @@ export function CrtScreen({
   return (
     <div className={`${box} ${className}`}>
       {title && (
-        <div className="border-b border-[color:var(--color-border)]/60 px-3 py-2 font-mono text-sm">
+        <div className="border-b border-border/60 px-3 py-2 font-mono text-sm">
           <span className="text-accent">›</span>{" "}
           <span className="text-primary">{title}</span>
         </div>
