@@ -54,7 +54,7 @@ export default function AIChatScreen({ user, navigate }: any) {
         const finalContent = fullResponseRef.current;
         
         // Finalize
-        setHistory(h => [...h, { role: 'model', parts: [{ text: finalContent }] }]);
+        setHistory(h => [...h, { role: 'model', parts: [{ text: finalContent }], createdAt: new Date() }]);
         setIsThinking(false);
         setStreamText('');
         fullResponseRef.current = '';
@@ -99,12 +99,12 @@ export default function AIChatScreen({ user, navigate }: any) {
         setInput('');
         setHistory(h => [
           ...h,
-          { role: 'model', parts: [{ text: 'System: Your Gemini API key has been updated and saved.' }] },
+          { role: 'model', parts: [{ text: 'System: Your Gemini API key has been updated and saved.' }], createdAt: new Date() },
         ]);
       } catch {
         setHistory(h => [
           ...h,
-          { role: 'model', parts: [{ text: 'System: Failed to save your API key. Try again later.' }] },
+          { role: 'model', parts: [{ text: 'System: Failed to save your API key. Try again later.' }], createdAt: new Date() },
         ]);
       }
       return;
@@ -135,6 +135,7 @@ export default function AIChatScreen({ user, navigate }: any) {
                   '\n\nUse /model <name> to switch (e.g. /model flash, /model pro)',
               },
             ],
+            createdAt: new Date(),
           },
         ]);
         setInput('');
@@ -155,6 +156,7 @@ export default function AIChatScreen({ user, navigate }: any) {
           {
             role: 'model',
             parts: [{ text: `Unknown model "${parts[1]}". Available: ${AVAILABLE_MODELS.map(m => m.name).join(', ')}` }],
+            createdAt: new Date(),
           },
         ]);
       } else {
@@ -166,6 +168,7 @@ export default function AIChatScreen({ user, navigate }: any) {
           {
             role: 'model',
             parts: [{ text: `Switched to ${matched.name}. Ready for next message.` }],
+            createdAt: new Date(),
           },
         ]);
       }
@@ -176,7 +179,7 @@ export default function AIChatScreen({ user, navigate }: any) {
     setInput('');
     setScrollOffset(0);
 
-    setHistory(h => [...h, { role: 'user', parts: [{ text: userMessage }] }]);
+    setHistory(h => [...h, { role: 'user', parts: [{ text: userMessage }], createdAt: new Date() }]);
 
     setIsThinking(true);
     fullResponseRef.current = '';
@@ -213,7 +216,7 @@ export default function AIChatScreen({ user, navigate }: any) {
       }
       
       await AIService.saveMessage(user.id, fallback, true, currentModel);
-      setHistory(h => [...h, { role: 'model', parts: [{ text: fallback }] }]);
+      setHistory(h => [...h, { role: 'model', parts: [{ text: fallback }], createdAt: new Date() }]);
       setIsThinking(false);
       setStreamText('');
       fullResponseRef.current = '';
@@ -338,132 +341,120 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
 
   const chatHeight = Math.max(5, rows - 7);
   const allLines: React.ReactNode[] = [];
-  const isNarrow = width < 45;
+  
+  let lastRole = '';
 
   if (history.length > 0) {
     history.forEach((turn, turnIdx) => {
       const isUser = turn.role === 'user';
-      const prefix = isUser ? 'You: ' : 'TermChat AI: ';
-      const prefixLen = prefix.length;
+      const isSameSender = turn.role === lastRole;
       const content = turn.parts[0].text;
+      const time = turn.createdAt ? new Date(turn.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+      const timePrefix = `[${time}] `;
+      const indent = timePrefix.length;
+      
+      const prefix = isUser ? 'You: ' : 'TermChat AI: ';
+      const userColor = isUser ? '#50fa7b' : theme.colors.primary;
 
-      if (isNarrow) {
-        // Adaptive Stacked Layout for Narrow Screens
+      if (!isSameSender && turnIdx > 0) {
+        allLines.push(<Box key={`gap-${turnIdx}`} height={1} flexShrink={0} />);
+      }
+
+      const contentWidth = Math.max(10, width - indent - 4);
+      const wrappedContent = wrapAnsi(content, contentWidth, { hard: true, trim: false });
+      const contentLines = wrappedContent.split('\n');
+
+      if (!isSameSender) {
+        // New sender header
         allLines.push(
-          <Box key={`t${turnIdx}-prefix`} paddingLeft={1}>
-            <Text color={isUser ? '#50fa7b' : theme.colors.primary} bold underline>
-              {prefix.trim()}
-            </Text>
+          <Box key={`t${turnIdx}-header`} flexDirection="row" flexShrink={0}>
+            <Text dimColor color="gray">{timePrefix}</Text>
+            <Text color={userColor} bold>{prefix}</Text>
           </Box>
         );
 
-        const wrappedContent = wrapAnsi(content, Math.max(10, width - 4), {
-          hard: true,
-          trim: false,
-        });
-        const contentLines = wrappedContent.split('\n');
-
         contentLines.forEach((lineText, idx) => {
           allLines.push(
-            <Box key={`t${turnIdx}-l${idx}`} paddingLeft={2}>
+            <Box key={`t${turnIdx}-l${idx}`} flexDirection="row" flexShrink={0}>
+              <Text>{' '.repeat(indent)}</Text>
               <Text>{renderRichLine(lineText, isUser, theme)}</Text>
             </Box>
           );
         });
       } else {
-        // Standard Side-by-Side Layout
-        const wrapWidth = Math.max(10, width - prefixLen - 8);
-        const wrappedContent = wrapAnsi(content, wrapWidth, {
-          hard: true,
-          trim: false,
-        });
-        const contentLines = wrappedContent.split('\n');
-
+        // Same sender - compact format
         contentLines.forEach((lineText, idx) => {
           allLines.push(
-            <Box key={`t${turnIdx}-l${idx}`} flexDirection="row">
+            <Box key={`t${turnIdx}-l${idx}`} flexDirection="row" flexShrink={0}>
               {idx === 0 ? (
-                <Text color={isUser ? '#50fa7b' : theme.colors.primary} bold>
-                  {prefix}
-                </Text>
+                <Text dimColor color="gray">{timePrefix}</Text>
               ) : (
-                <Text>{' '.repeat(prefixLen)}</Text>
+                <Text>{' '.repeat(indent)}</Text>
               )}
-              <Text> {renderRichLine(lineText, isUser, theme)}</Text>
+              <Text>{renderRichLine(lineText, isUser, theme)}</Text>
             </Box>
           );
         });
       }
 
-      if (turnIdx < history.length - 1 || isThinking || streamText) {
-        allLines.push(<Box key={`gap-${turnIdx}`} height={1} />);
-      }
+      lastRole = turn.role;
     });
   }
 
   if (isThinking || streamText) {
-    const prefix = 'TermChat AI: ';
-    const prefixLen = prefix.length;
+    const isSameSender = lastRole === 'model';
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timePrefix = `[${time}] `;
+    const indent = timePrefix.length;
+    const userColor = theme.colors.primary;
+    const contentWidth = Math.max(10, width - indent - 4);
+
+    if (!isSameSender && history.length > 0) {
+      allLines.push(<Box key="gap-streaming" height={1} flexShrink={0} />);
+    }
 
     if (streamText) {
-      if (isNarrow) {
+      const wrappedStream = wrapAnsi(streamText, contentWidth, { hard: true, trim: false });
+      const streamLines = wrappedStream.split('\n');
+
+      if (!isSameSender) {
         allLines.push(
-          <Box key="stream-prefix" paddingLeft={1}>
-            <Text color={theme.colors.primary} bold underline>
-              TermChat AI:
-            </Text>
+          <Box key="stream-header" flexDirection="row" flexShrink={0}>
+            <Text dimColor color="gray">{timePrefix}</Text>
+            <Text color={userColor} bold>TermChat AI: </Text>
           </Box>
         );
-
-        const wrappedStream = wrapAnsi(streamText, Math.max(10, width - 4), {
-          hard: true,
-          trim: false,
-        });
-        const streamLines = wrappedStream.split('\n');
-
         streamLines.forEach((lineText, idx) => {
           allLines.push(
-            <Box key={`stream-l${idx}`} paddingLeft={2}>
+            <Box key={`stream-l${idx}`} flexDirection="row" flexShrink={0}>
+              <Text>{' '.repeat(indent)}</Text>
               <Text>{renderRichLine(lineText, false, theme)}</Text>
             </Box>
           );
         });
       } else {
-        const wrapWidth = Math.max(10, width - prefixLen - 8);
-        const wrappedStream = wrapAnsi(streamText, wrapWidth, {
-          hard: true,
-          trim: false,
-        });
-        const streamLines = wrappedStream.split('\n');
-
         streamLines.forEach((lineText, idx) => {
           allLines.push(
-            <Box key={`stream-l${idx}`} flexDirection="row">
+            <Box key={`stream-l${idx}`} flexDirection="row" flexShrink={0}>
               {idx === 0 ? (
-                <Text color={theme.colors.primary} bold>
-                  {prefix}
-                </Text>
+                <Text dimColor color="gray">{timePrefix}</Text>
               ) : (
-                <Text>{' '.repeat(prefixLen)}</Text>
+                <Text>{' '.repeat(indent)}</Text>
               )}
-              <Text> {renderRichLine(lineText, false, theme)}</Text>
+              <Text>{renderRichLine(lineText, false, theme)}</Text>
             </Box>
           );
         });
       }
+    } else if (isThinking) {
+      allLines.push(
+        <Box key="thinking" gap={1} flexShrink={0}>
+          <Spinner label="TermChat AI is thinking..." />
+        </Box>
+      );
     }
-
-      if (isThinking && !streamText) {
-        allLines.push(
-          <Box key="thinking" gap={1}>
-            <Spinner label="TermChat AI is thinking..." />
-          </Box>
-        );
-      }
-      
-      // Add gap after the active AI block
-      allLines.push(<Box key="ai-active-gap" height={1} />);
-      
+    
+    allLines.push(<Box key="ai-active-gap" height={1} flexShrink={0} />);
   }
 
   const maxLines = Math.max(1, chatHeight);

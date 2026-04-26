@@ -9,6 +9,7 @@ import { AVAILABLE_MODELS, ModelId } from '@/lib/models';
 export interface ChatMessage {
   role: 'user' | 'model';
   parts: { text: string }[];
+  createdAt?: Date;
 }
 
 export interface StreamCallbacks {
@@ -158,6 +159,7 @@ export class AIService {
     return messages.map(m => ({
       role: m.isAIResponse ? 'model' : 'user',
       parts: [{ text: m.content }],
+      createdAt: m.createdAt,
     }));
   }
 

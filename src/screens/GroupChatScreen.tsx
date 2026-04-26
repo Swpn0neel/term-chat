@@ -237,19 +237,26 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
               });
 
               let lastDate = '';
+              let lastSenderId = '';
               const allLines: React.ReactNode[] = [];
 
-              messages.forEach((msg) => {
+              messages.forEach((msg, msgIdx) => {
                 const dateStr = formatDateSeparator(msg.createdAt);
+                const isSameSender = msg.senderId === lastSenderId;
+                
                 if (dateStr !== lastDate) {
-                  allLines.push(<Box key={`gap-${msg.id}`} height={1} />);
+                  allLines.push(<Box key={`gap-${msg.id}`} height={1} flexShrink={0} />);
                   allLines.push(
-                    <Box key={`date-${msg.id}`} width="100%" justifyContent="center">
+                    <Box key={`date-${msg.id}`} width="100%" justifyContent="center" flexShrink={0}>
                       <Text color="gray" dimColor>── {dateStr} ──</Text>
                     </Box>
                   );
-                  allLines.push(<Box key={`date-gap-${msg.id}`} height={1} />);
+                  allLines.push(<Box key={`date-gap-${msg.id}`} height={1} flexShrink={0} />);
                   lastDate = dateStr;
+                  lastSenderId = ''; // Reset grouping on new date
+                } else if (!isSameSender && msgIdx > 0 && msg.type !== 'SYSTEM' && lastSenderId !== '') {
+                  // Regular gap between different users on the same day
+                  allLines.push(<Box key={`gap-${msg.id}`} height={1} flexShrink={0} />);
                 }
 
                 if (msg.type === 'SYSTEM') {
@@ -263,44 +270,64 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                       </Text>
                     </Box>
                   );
-                  allLines.push(<Box key={`msg-gap-${msg.id}`} height={1} />);
+                  allLines.push(<Box key={`msg-gap-${msg.id}`} height={1} flexShrink={0} />);
+                  lastSenderId = ''; // Reset grouping after system message
                   return;
                 }
 
                 const isMe = msg.senderId === user.id;
                 const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const timePrefix = `[${time}] `;
+                const indent = timePrefix.length;
                 
                 // Find member color
                 const member = group?.members?.find((m: any) => m.userId === msg.senderId);
                 const userColor = member?.color || (isMe ? '#50fa7b' : theme.colors.primary);
 
-                const prefix = `[${time}] ${isMe ? 'You' : msg.sender.username}: `;
-                const prefixLen = prefix.length;
-
-                const wrappedContent = wrapAnsi(msg.content, Math.max(10, width - prefixLen - 6), { hard: true, trim: false });
+                const contentWidth = Math.max(10, width - indent - 4);
+                
+                const wrappedContent = wrapAnsi(msg.content, contentWidth, { hard: true, trim: false });
                 const contentLines = wrappedContent.split('\n');
 
-                contentLines.forEach((lineText, idx) => {
+                if (msg.senderId !== lastSenderId) {
+                  // New sender header
                   allLines.push(
-                    <Box key={`${msg.id}-l${idx}`} flexDirection="row">
-                      {idx === 0 ? (
-                        <>
-                          <Text dimColor color="gray">[{time}] </Text>
-                          <Text color={userColor} bold>
-                            {isMe ? 'You' : msg.sender.username}
-                            {msg.isEdited && <Text italic dimColor> (edited)</Text>}:
-                          </Text>
-                        </>
-                      ) : (
-                        <Text>{' '.repeat(prefixLen)}</Text>
-                      )}
-                      <Text> {lineText}</Text>
+                    <Box key={`${msg.id}-header`} flexDirection="row" flexShrink={0}>
+                      <Text dimColor color="gray">{timePrefix}</Text>
+                      <Text color={userColor} bold>{isMe ? 'You' : msg.sender.username}:</Text>
                     </Box>
                   );
-                });
+
+                  // Indented message lines
+                  contentLines.forEach((lineText, idx) => {
+                    const isLastLine = idx === contentLines.length - 1;
+                    allLines.push(
+                      <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
+                        <Text>{' '.repeat(indent)}</Text>
+                        <Text>{lineText}</Text>
+                        {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
+                      </Box>
+                    );
+                  });
+                } else {
+                  // Same sender - compact format
+                  contentLines.forEach((lineText, idx) => {
+                    const isLastLine = idx === contentLines.length - 1;
+                    allLines.push(
+                      <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
+                        {idx === 0 ? (
+                          <Text dimColor color="gray">{timePrefix}</Text>
+                        ) : (
+                          <Text>{' '.repeat(indent)}</Text>
+                        )}
+                        <Text>{lineText}</Text>
+                        {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
+                      </Box>
+                    );
+                  });
+                }
                 
-                // Add vertical gap between messages
-                allLines.push(<Box key={`msg-gap-${msg.id}`} height={1} />);
+                lastSenderId = msg.senderId;
               });
 
               if (isSending) {

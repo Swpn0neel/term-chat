@@ -238,13 +238,14 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
               const chatHeight = Math.max(5, height - 7);
 
               let lastDate = '';
+              let lastSenderId = '';
               const allLines: React.ReactNode[] = [];
 
-              messages.forEach((msg) => {
+              messages.forEach((msg, msgIdx) => {
                 const dateStr = formatDateSeparator(msg.createdAt);
+                const isSameSender = msg.senderId === lastSenderId;
                 
                 if (dateStr !== lastDate) {
-                  // Add a gap line and then the date separator
                   allLines.push(<Box key={`gap-${msg.id}`} height={1} flexShrink={0} />);
                   allLines.push(
                     <Box key={`date-${msg.id}`} width="100%" justifyContent="center" flexShrink={0}>
@@ -253,42 +254,68 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                   );
                   allLines.push(<Box key={`date-gap-${msg.id}`} height={1} flexShrink={0} />);
                   lastDate = dateStr;
+                  lastSenderId = ''; // Reset grouping on new date
+                } else if (!isSameSender && msgIdx > 0) {
+                  // Regular gap between different users on the same day
+                  allLines.push(<Box key={`gap-${msg.id}`} height={1} flexShrink={0} />);
                 }
 
                 const isMe = msg.senderId === user.id;
                 const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const prefix = `[${time}] ${isMe ? 'You' : msg.sender.username}: `;
-                const prefixLen = prefix.length;
+                const timePrefix = `[${time}] `;
+                const indent = timePrefix.length;
                 
-                // Wrap content based on available width
-                // 4 is for paddingX and border offsets
-                const wrappedContent = wrapAnsi(msg.content, Math.max(10, width - prefixLen - 6), { hard: true, trim: false });
+                // Colors
+                const isMeSender = friendship?.senderId === user.id;
+                const myColor = (isMeSender ? friendship?.senderColor : friendship?.receiverColor) || '#50fa7b';
+                const friendColor = (isMeSender ? friendship?.receiverColor : friendship?.senderColor) || theme.colors.primary;
+                const userColor = isMe ? myColor : friendColor;
+
+                const contentWidth = Math.max(10, width - indent - 4);
+                
+                const editedMarker = msg.isEdited ? ' (edited)' : '';
+                const wrappedContent = wrapAnsi(msg.content, contentWidth, { hard: true, trim: false });
                 const contentLines = wrappedContent.split('\n');
 
-                contentLines.forEach((lineText, idx) => {
-                  const isMeSender = friendship?.senderId === user.id;
-                  const myColor = (isMeSender ? friendship?.senderColor : friendship?.receiverColor) || '#50fa7b';
-                  const friendColor = (isMeSender ? friendship?.receiverColor : friendship?.senderColor) || theme.colors.primary;
-
+                if (msg.senderId !== lastSenderId) {
+                  // New sender header
                   allLines.push(
-                    <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
-                      {idx === 0 ? (
-                        <>
-                          <Text dimColor color="gray">[{time}] </Text>
-                          <Text color={isMe ? myColor : friendColor} bold>
-                            {isMe ? 'You' : msg.sender.username}
-                            {msg.isEdited && <Text dimColor> (edited)</Text>}:
-                          </Text>
-                        </>
-                      ) : (
-                        <Text>{' '.repeat(prefixLen)}</Text>
-                      )}
-                      <Text> {lineText}</Text>
+                    <Box key={`${msg.id}-header`} flexDirection="row" flexShrink={0}>
+                      <Text dimColor color="gray">{timePrefix}</Text>
+                      <Text color={userColor} bold>{isMe ? 'You' : msg.sender.username}:</Text>
                     </Box>
                   );
-                });
+
+                  // Indented message lines
+                  contentLines.forEach((lineText, idx) => {
+                    const isLastLine = idx === contentLines.length - 1;
+                    allLines.push(
+                      <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
+                        <Text>{' '.repeat(indent)}</Text>
+                        <Text>{lineText}</Text>
+                        {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
+                      </Box>
+                    );
+                  });
+                } else {
+                  // Same sender - compact format
+                  contentLines.forEach((lineText, idx) => {
+                    const isLastLine = idx === contentLines.length - 1;
+                    allLines.push(
+                      <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
+                        {idx === 0 ? (
+                          <Text dimColor color="gray">{timePrefix}</Text>
+                        ) : (
+                          <Text>{' '.repeat(indent)}</Text>
+                        )}
+                        <Text>{lineText}</Text>
+                        {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
+                      </Box>
+                    );
+                  });
+                }
                 
-                allLines.push(<Box key={`msg-gap-${msg.id}`} height={1} flexShrink={0} />);
+                lastSenderId = msg.senderId;
               });
 
               if (isSending) {
