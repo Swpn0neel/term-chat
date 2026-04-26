@@ -6,34 +6,18 @@ import { Alert } from '@/components/Alert';
 import { Spinner } from '@/components/Spinner';
 import { SocialService } from '@/services/socialService';
 import { Heading } from '@/components/Heading';
+import { usePolling } from '@/contexts/PollingContext';
 import { Title } from '@/components/Title';
 import { formatLastSeen } from '@/lib/dateUtils';
 import { ClackSelect } from '@/components/Menu';
 
 export default function FriendListScreen({ user, navigate, unreadCounts = {} }: any) {
   const theme = useTheme();
-  const [friends, setFriends] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { screenData } = usePolling();
+  const friends = screenData?.friends || [];
+  const isLoading = !screenData?.friends;
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFriends = async () => {
-    try {
-      const data = await SocialService.getFriendList(user.id);
-      setFriends(data);
-    } catch (err: any) {
-      setError('Failed to load friends.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchFriends();
-    
-    // Polling friends status every 5 seconds
-    const interval = setInterval(fetchFriends, 5000);
-    return () => clearInterval(interval);
-  }, [user.id]);
 
   useInput((_input, key) => {
     if (key.escape) {
@@ -67,7 +51,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
           <Box padding={1}>
             <ClackSelect 
               label="Select a friend to start chatting"
-              options={friends.map(f => {
+              options={friends.map((f: any) => {
                 const lastSeenDate = new Date(f.lastSeen);
                 const diffMs = Date.now() - lastSeenDate.getTime();
                 const isTrulyOnline = f.isOnline && Math.abs(diffMs) < 45000;

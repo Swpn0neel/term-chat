@@ -11,36 +11,30 @@ import { prisma } from '@/lib/prisma';
 
 import { Heading } from '@/components/Heading';
 import { formatLastSeen, formatDateSeparator } from '@/lib/dateUtils';
+import { usePolling } from '@/contexts/PollingContext';
 
 export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   const onReadRef = useRef(onRead);
   onReadRef.current = onRead;
   const theme = useTheme();
-  const [messages, setMessages] = useState<any[]>([]);
-  const [friend, setFriend] = useState<any>(null);
+  
+  const { screenData, triggerImmediatePoll } = usePolling();
+  
+  const friend = screenData?.friend;
+  const friendship = screenData?.friendship;
+  const messages = screenData?.conversation || [];
+  const isFriend = !!friendship;
+  const isLoading = !screenData?.friend;
+
+  const [localMessages, setLocalMessages] = useState<any[]>([]);
+  const allMessages = [...messages, ...localMessages];
+
   const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [isFriend, setIsFriend] = useState(true);
-  const [friendship, setFriendship] = useState<any>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   
   const { stdout } = useStdout();
   const lastMessageCount = useRef(0);
-
-  const fetchFriendInfo = useCallback(async () => {
-    try {
-      const data = await prisma.user.findUnique({
-        where: { id: friendId },
-        select: { username: true, isOnline: true, lastSeen: true }
-      });
-      setFriend(data);
-      
-      const fs = await SocialService.getFriendship(user.id, friendId);
-      setIsFriend(!!fs);
-      setFriendship(fs);
-    } catch (err) {}
-  }, [user.id, friendId]);
 
   const markRead = useCallback(async () => {
     try {
@@ -49,38 +43,12 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
     } catch (err) {}
   }, [user.id, friendId]);
 
-  const fetchConversation = useCallback(async (isInitial = false) => {
-    if (isInitial) setIsLoading(true);
-    try {
-      const data = await MessageService.getConversation(user.id, friendId);
-      
-      // If we got new messages, mark them as read
-      if (data.length > lastMessageCount.current) {
-        markRead();
-      }
-      
-      lastMessageCount.current = data.length;
-      setMessages(data);
-    } catch (err) {
-      // Silent error handle
-    } finally {
-      if (isInitial) setIsLoading(false);
-    }
-  }, [user.id, friendId, markRead]);
-
   useEffect(() => {
-    fetchFriendInfo();
-    fetchConversation(true);
-    markRead(); 
-
-    // Setup Polling (3 seconds)
-    const interval = setInterval(() => {
-      fetchConversation();
-      fetchFriendInfo();
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [friendId, fetchFriendInfo, fetchConversation, markRead]);
+    if (messages.length > lastMessageCount.current) {
+      markRead();
+    }
+    lastMessageCount.current = messages.length;
+  }, [messages.length, markRead]);
 
   const handleSend = async () => {
     const userMessage = newMessage.trim();
@@ -94,7 +62,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
       if (!prompt) return;
 
       if (!user.geminiApiKey) {
-        setMessages(prev => [...prev, {
+        setLocalMessages((prev: any) => [...prev, {
           id: 'ai-error-' + Date.now(),
           content: "You haven't set your Gemini API key. Use '/set [key]' in AI Chat to enable this.",
           type: 'SYSTEM',
@@ -111,9 +79,9 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
         const instruction = 'You are TermChat AI. Your response MUST be a single paragraph of plain text ONLY. ABSOLUTELY NO markdown, no bolding, no italics, no lists, and no line breaks. Keep it concise, friendly, and readable.';
         const response = await AIService.sendChatMessage(prompt, [], user.geminiApiKey, 'gemini-2.5-flash-lite', instruction);
         await MessageService.sendMessage(user.id, friendId, response, true);
-        await fetchConversation();
+        triggerImmediatePoll();
       } catch (err: any) {
-        setMessages(prev => [...prev, {
+        setLocalMessages((prev: any) => [...prev, {
           id: 'ai-error-' + Date.now(),
           content: `AI Error: ${err.message}`,
           type: 'SYSTEM',
@@ -136,7 +104,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           await MessageService.deleteConversationMessages(user.id, friendId);
         } else {
           const n = arg ? parseInt(arg) : 1;
-          const myMessages = messages.filter(m => m.senderId === user.id);
+          const myMessages = messages.filter((m: any) => m.senderId === user.id);
           
           // Get the Nth last message
           const targetIndex = myMessages.length - n;
@@ -147,7 +115,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           }
         }
         setNewMessage('');
-        await fetchConversation();
+        triggerImmediatePoll();
       } catch (err) {
         // Silently fail or log for debug
       }
@@ -169,7 +137,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
       
       try {
         if (newContent) {
-          const myMessages = messages.filter(m => m.senderId === user.id);
+          const myMessages = messages.filter((m: any) => m.senderId === user.id);
           const targetIndex = myMessages.length - n;
           
           if (targetIndex >= 0 && targetIndex < myMessages.length) {
@@ -178,7 +146,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           }
         }
         setNewMessage('');
-        await fetchConversation();
+        triggerImmediatePoll();
       } catch (err) {}
       return;
     }
@@ -188,10 +156,10 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
       const parts = userMessage.split(' ');
       const cmd = parts[0].toLowerCase();
       if (cmd === '/color' || cmd === '/changecolor' || cmd === '/changecolour') {
-        try {
+          try {
           await SocialService.changeFriendColor(user.id, friendId);
-          await fetchFriendInfo();
-          setMessages(prev => [...prev, {
+          triggerImmediatePoll();
+          setLocalMessages((prev: any) => [...prev, {
             id: 'color-' + Date.now(),
             content: 'Color changed! It will take effect on your next message.',
             type: 'SYSTEM',
@@ -210,7 +178,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
 
     try {
       await MessageService.sendMessage(user.id, friendId, userMessage);
-      await fetchConversation(); // Immediate refresh after send
+      triggerImmediatePoll(); // Immediate refresh after send
     } catch (err) {
       setNewMessage(userMessage);
     } finally {
@@ -277,7 +245,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
         ) : (
           <Box flexDirection="column" paddingX={1} width="100%">
             {(() => {
-              if (messages.length === 0) {
+              if (allMessages.length === 0) {
                 return <Text dimColor italic>No messages yet. Say hi!</Text>;
               }
 
@@ -292,7 +260,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
               
               const allLines: React.ReactNode[] = [];
 
-              messages.forEach((msg, msgIdx) => {
+              allMessages.forEach((msg, msgIdx) => {
                 const dateStr = formatDateSeparator(msg.createdAt);
                 const isSameSender = msg.senderId === lastSenderId;
                 
@@ -415,7 +383,17 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           </Box>
         )}
       </AppShell.Content>
-      {!isFriend ? (
+      {isLoading ? (
+        <AppShell.Input
+          placeholder="Synchronizing..."
+          value=""
+          onChange={() => {}}
+          onSubmit={() => {}}
+          borderStyle="single"
+          borderColor="gray"
+          commands={[]}
+        />
+      ) : !isFriend ? (
         <Box padding={1} borderStyle="single" borderColor="red" justifyContent="center">
           <Text color="red" bold>You cannot message this user because you are not friends.</Text>
         </Box>

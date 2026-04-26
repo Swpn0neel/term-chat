@@ -6,27 +6,12 @@ import { Spinner } from '@/components/Spinner';
 import { Heading } from '@/components/Heading';
 import { Title } from '@/components/Title';
 import { ClackSelect, ClackOption } from '@/components/Menu';
+import { usePolling } from '@/contexts/PollingContext';
 
 export default function GroupListScreen({ user, navigate, unreadCounts = {} }: any) {
-  const [groups, setGroups] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchGroups = async (isInitial = false) => {
-    if (isInitial) setIsLoading(true);
-    try {
-      const data = await GroupService.getGroupsForUser(user.id);
-      setGroups(data);
-    } catch (err) {
-    } finally {
-      if (isInitial) setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchGroups(true);
-    const interval = setInterval(() => fetchGroups(false), 5000);
-    return () => clearInterval(interval);
-  }, [user.id]);
+  const { screenData } = usePolling();
+  const groups = screenData?.groups || [];
+  const isLoading = !screenData?.groups;
 
   const handleSelect = (val: string) => {
     if (val === 'create-new') {
@@ -37,7 +22,7 @@ export default function GroupListScreen({ user, navigate, unreadCounts = {} }: a
   };
 
   const options: ClackOption[] = [
-    ...groups.map(g => {
+    ...groups.map((g: any) => {
       const unreadCount = unreadCounts[g.id] || 0;
       return {
         label: `${g.name}${unreadCount > 0 ? ' ●' : ''}`,

@@ -7,53 +7,36 @@ import { Spinner } from '@/components/Spinner';
 import { SocialService } from '@/services/socialService';
 import { Title } from '@/components/Title';
 import { ClackMultiSelect } from '@/components/Menu';
+import { usePolling } from '@/contexts/PollingContext';
 
 export default function PendingRequestsScreen({ user, navigate, onUpdate }: any) {
   const theme = useTheme();
-  const [requests, setRequests] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { screenData, triggerImmediatePoll } = usePolling();
+  const requests = screenData?.requests || [];
+  const isLoading = !screenData?.requests;
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  const fetchRequests = async (isInitial = false) => {
-    if (isInitial) setIsLoading(true);
-    try {
-      const data = await SocialService.getPendingRequests(user.id);
-      setRequests(data);
-      if (onUpdate) onUpdate(data.length);
-    } catch (err: any) {
-      setError(`Failed to load requests: ${err.message}`);
-    } finally {
-      if (isInitial) setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRequests(true);
-    const interval = setInterval(() => fetchRequests(false), 5000);
-    return () => clearInterval(interval);
-  }, [user.id]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleBulkAction = async (action: 'ACCEPT' | 'DECLINE', idsOverride?: string[]) => {
     const ids = idsOverride || selectedIds;
     if (ids.length === 0) return;
 
-    setIsLoading(true);
+    setIsProcessing(true);
     try {
       await SocialService.respondToMultipleRequests(ids, action);
-      const nextRequests = requests.filter(r => !ids.includes(r.id));
-      setRequests(nextRequests);
+      triggerImmediatePoll();
       setSelectedIds([]);
-      if (onUpdate) onUpdate(nextRequests.length);
+      if (onUpdate) onUpdate(requests.length - ids.length);
     } catch (err: any) {
       setError(`Failed to ${action.toLowerCase()} requests.`);
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
   useInput((input, key) => {
-    if (isLoading) return;
+    if (isLoading || isProcessing) return;
 
     if (key.escape) {
       navigate('dashboard', { initialMenu: 'friends' });
@@ -87,7 +70,7 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
           <Box padding={1} flexDirection="column">
             <ClackMultiSelect 
               label="Pending Requests"
-              options={requests.map(req => ({
+              options={requests.map((req: any) => ({
                 label: req.sender.username,
                 value: req.id,
                 hint: `New ● ${new Date(req.createdAt).toLocaleDateString()}`

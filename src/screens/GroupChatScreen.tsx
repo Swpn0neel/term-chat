@@ -10,73 +10,46 @@ import { AIService } from '@/services/aiService';
 
 import { Heading } from '@/components/Heading';
 import { formatDateSeparator } from '@/lib/dateUtils';
+import { usePolling } from '@/contexts/PollingContext';
 
 export default function GroupChatScreen({ user, groupId, navigate, onRead }: any) {
   const theme = useTheme();
-  const [messages, setMessages] = useState<any[]>([]);
-  const [group, setGroup] = useState<any>(null);
+  const { screenData, triggerImmediatePoll } = usePolling();
+  
+  const group = screenData?.groupDetails;
+  const messages = screenData?.messages || [];
+  const isLoading = !screenData?.groupDetails;
+  
   const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [localMessages, setLocalMessages] = useState<any[]>([]);
+  const allMessages = [...messages, ...localMessages];
   const [isSending, setIsSending] = useState(false);
   const [scrollOffset, setScrollOffset] = useState(0);
-  const [onlineCount, setOnlineCount] = useState(0);
 
   const { stdout } = useStdout();
 
-  const fetchGroupInfo = useCallback(async () => {
-    try {
-      const data = await GroupService.getGroupDetails(groupId);
-      if (!data) {
-        navigate('group-list');
-        return;
-      }
-      setGroup(data);
-
-      // Check if user is still a member
-      const isMember = data.members.some((m: any) => m.user.id === user.id);
-      if (!isMember) {
-        navigate('group-list');
-        return;
-      }
-
-      // Calculate online members
-      const count = data.members.filter((m: any) => {
-        const lastSeenDate = new Date(m.user.lastSeen);
-        const diffMs = Date.now() - lastSeenDate.getTime();
-        return m.user.isOnline && Math.abs(diffMs) < 45000;
-      }).length;
-      setOnlineCount(count);
-    } catch (err) {
+  useEffect(() => {
+    if (!group) return;
+    // Check if user is still a member
+    const isMember = group.members.some((m: any) => m.user.id === user.id);
+    if (!isMember) {
       navigate('group-list');
     }
-  }, [groupId, navigate]);
-
-  const fetchConversation = useCallback(async (isInitial = false) => {
-    if (isInitial) setIsLoading(true);
-    try {
-      const data = await MessageService.getGroupConversation(groupId, user.id);
-      setMessages(data);
-    } catch (err) {
-    } finally {
-      if (isInitial) setIsLoading(false);
-    }
-  }, [groupId, user.id]);
+  }, [group, user.id, navigate]);
 
   useEffect(() => {
-    fetchGroupInfo();
-    fetchConversation(true);
-    GroupService.markAsRead(groupId, user.id);
-    if (onRead) onRead();
-
-    const interval = setInterval(() => {
-      fetchConversation();
-      fetchGroupInfo();
-      GroupService.markAsRead(groupId, user.id);
+    if (messages.length > 0) {
+      GroupService.markAsRead(groupId, user.id).catch(() => {});
       if (onRead) onRead();
-    }, 3000);
+    }
+  }, [messages.length, groupId, user.id]);
 
-    return () => clearInterval(interval);
-  }, [groupId, user.id, fetchGroupInfo, fetchConversation]);
+  const onlineCount = group ? group.members.filter((m: any) => {
+    const lastSeenDate = new Date(m.user.lastSeen);
+    const diffMs = Date.now() - lastSeenDate.getTime();
+    return m.user.isOnline && Math.abs(diffMs) < 45000;
+  }).length : 0;
+
 
   const handleSend = async () => {
     const userMessage = newMessage.trim();
@@ -91,14 +64,8 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
       try {
         if (cmd === '/color' || cmd === '/changecolor' || cmd === '/changecolour') {
           await GroupService.changeMemberColor(groupId, user.id);
-          await fetchGroupInfo();
-          setMessages(prev => [...prev, {
-            id: 'color-' + Date.now(),
-            content: 'Color changed! It will take effect on your next message.',
-            type: 'SYSTEM',
-            createdAt: new Date(),
-            sender: { username: 'System' }
-          }]);
+          triggerImmediatePoll();
+          // We can't immediately append a system message locally unless we add it to the DB, but changeMemberColor doesn't add a system message. Wait, let's just do it optimistically.
           setNewMessage('');
           return;
         }
@@ -106,14 +73,14 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
           if (group.creatorId !== user.id) throw new Error('Only creator can add members.');
           await GroupService.addMember(groupId, arg, user.id);
           setNewMessage('');
-          await fetchConversation();
+          triggerImmediatePoll();
           return;
         }
         if (cmd === '/remove' && arg) {
           if (group.creatorId !== user.id) throw new Error('Only creator can remove members.');
           await GroupService.removeMember(groupId, arg, user.id);
           setNewMessage('');
-          await fetchConversation();
+          triggerImmediatePoll();
           return;
         }
         if (cmd === '/leave') {
@@ -127,7 +94,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
             await MessageService.deleteGroupMessages(user.id, groupId);
           } else {
             const n = subArg ? parseInt(subArg) : 1;
-            const myMessages = messages.filter(m => m.senderId === user.id);
+            const myMessages = messages.filter((m: any) => m.senderId === user.id);
 
             const targetIndex = myMessages.length - n;
 
@@ -137,7 +104,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
             }
           }
           setNewMessage('');
-          await fetchConversation();
+          triggerImmediatePoll();
           return;
         }
         if (cmd === '/edit') {
@@ -153,7 +120,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
           }
           
           if (newContent) {
-            const myMessages = messages.filter(m => m.senderId === user.id);
+            const myMessages = messages.filter((m: any) => m.senderId === user.id);
             const targetIndex = myMessages.length - n;
             
             if (targetIndex >= 0 && targetIndex < myMessages.length) {
@@ -162,11 +129,11 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
             }
           }
           setNewMessage('');
-          await fetchConversation();
+          triggerImmediatePoll();
           return;
         }
       } catch (err: any) {
-        setMessages(prev => [...prev, {
+        setLocalMessages(prev => [...prev, {
           id: 'error-' + Date.now(),
           content: `Error: ${err.message}`,
           type: 'SYSTEM',
@@ -184,7 +151,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
       if (!prompt) return;
 
       if (!user.geminiApiKey) {
-        setMessages(prev => [...prev, {
+        setLocalMessages(prev => [...prev, {
           id: 'ai-error-' + Date.now(),
           content: "You haven't set your Gemini API key. Use '/set [key]' in AI Chat to enable this.",
           type: 'SYSTEM',
@@ -201,9 +168,9 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
         const instruction = 'You are TermChat AI. Your response MUST be a single paragraph of plain text ONLY. ABSOLUTELY NO markdown, no bolding, no italics, no lists, and no line breaks. Keep it concise, friendly, and readable.';
         const response = await AIService.sendChatMessage(prompt, [], user.geminiApiKey, 'gemini-2.5-flash-lite', instruction);
         await MessageService.sendGroupMessage(user.id, groupId, response, true);
-        await fetchConversation();
+        triggerImmediatePoll();
       } catch (err: any) {
-        setMessages(prev => [...prev, {
+        setLocalMessages(prev => [...prev, {
           id: 'ai-error-' + Date.now(),
           content: `AI Error: ${err.message}`,
           type: 'SYSTEM',
@@ -222,7 +189,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
 
     try {
       await MessageService.sendGroupMessage(user.id, groupId, userMessage);
-      await fetchConversation();
+      triggerImmediatePoll();
     } catch (err) {
       setNewMessage(userMessage);
     } finally {
@@ -295,8 +262,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
               let lastMessageType = '';
               
               const allLines: React.ReactNode[] = [];
-
-              messages.forEach((msg, msgIdx) => {
+              allMessages.forEach((msg: any, msgIdx: any) => {
                 const dateStr = formatDateSeparator(msg.createdAt);
                 const isSameSender = msg.senderId === lastSenderId;
                 

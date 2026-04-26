@@ -7,35 +7,23 @@ import { Alert } from '@/components/Alert';
 import { ClackSelect } from '@/components/Menu';
 import { TextInput } from '@/components/TextInput';
 import { getPendingTransfers, acceptTransfer, declineTransfer } from '@/services/fileTransferService';
+import { usePolling } from '@/contexts/PollingContext';
 import prettyBytes from 'pretty-bytes';
 
 type Stage = 'LIST' | 'ACTIONS' | 'DESTINATION' | 'DOWNLOADING' | 'DONE' | 'ERROR';
 
 export default function InboxScreen({ user, navigate }: any) {
+  const { screenData, triggerImmediatePoll } = usePolling();
+  const transfers = screenData?.transfers || [];
+  const isLoading = !screenData?.transfers;
+
   const [stage, setStage] = useState<Stage>('LIST');
-  const [transfers, setTransfers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
   const [destPath, setDestPath] = useState('');
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [savedPath, setSavedPath] = useState<string | null>(null);
-
-  const fetchTransfers = async () => {
-    try {
-      const list = await getPendingTransfers(user.id);
-      setTransfers(list);
-    } catch (err: any) {
-      setError('Failed to load transfers.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTransfers();
-  }, [user.id]);
 
   useInput((input, key) => {
     if (key.escape) {
@@ -50,7 +38,7 @@ export default function InboxScreen({ user, navigate }: any) {
   });
 
   const handleTransferSelect = (id: string) => {
-    const t = transfers.find(item => item.id === id);
+    const t = transfers.find((item: any) => item.id === id);
     setSelectedTransfer(t);
     setStage('ACTIONS');
   };
@@ -61,7 +49,7 @@ export default function InboxScreen({ user, navigate }: any) {
     } else if (action === 'decline') {
       try {
         await declineTransfer(selectedTransfer.id);
-        await fetchTransfers();
+        triggerImmediatePoll();
         setStage('LIST');
       } catch (err: any) {
         setError(`Decline failed: ${err.message}`);
@@ -114,7 +102,7 @@ export default function InboxScreen({ user, navigate }: any) {
             ) : (
               <ClackSelect 
                 label="Select a transfer to manage"
-                options={transfers.map(t => ({
+                options={transfers.map((t: any) => ({
                   label: t.fileName,
                   value: t.id,
                   hint: `${t.sender.username} ● ${prettyBytes(t.fileSize)}`
