@@ -191,7 +191,7 @@ export default function AIChatScreen({ user, navigate }: any) {
         throw new Error('NO_KEY');
       }
 
-      await AIService.streamChatMessage(
+      const fullText = await AIService.streamChatMessage(
         userMessage,
         history,
         apiKey,
@@ -201,6 +201,9 @@ export default function AIChatScreen({ user, navigate }: any) {
           onDone: handleStreamDone,
         }
       );
+
+      // Persist the successful response
+      await AIService.saveMessage(user.id, fullText, true, currentModel);
     } catch (err: any) {
       let fallback = 'An error occurred in the generation of the response.';
       if (err.message === 'NO_KEY') {
@@ -229,7 +232,7 @@ export default function AIChatScreen({ user, navigate }: any) {
   });
 
   const modelInfo = AIService.getModelInfo(currentModel);
-  const contentHeight = stdout?.rows ? Math.max(10, stdout.rows - 7) : 20;
+  const contentHeight = stdout?.rows ? Math.max(10, stdout.rows - 7) : 17;
   const contentRows = stdout?.rows || 24;
 
   return (
@@ -329,14 +332,13 @@ function renderRichLine(text: string, isUser: boolean, theme: any) {
 function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrollOffset }: ChatOutputProps) {
   if (history.length === 0 && !isThinking && !streamText) {
     return (
-      <Text dimColor italic>
-        Hello! I am your AI assistant. Ask me anything or use /model to switch models.
-      </Text>
+      <Text dimColor italic> Hello! I am your AI assistant. Ask me anything or use /model to switch models.</Text>
     );
   }
 
   const chatHeight = Math.max(5, rows - 7);
   const allLines: React.ReactNode[] = [];
+  const isNarrow = width < 45;
 
   if (history.length > 0) {
     history.forEach((turn, turnIdx) => {
@@ -345,26 +347,53 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
       const prefixLen = prefix.length;
       const content = turn.parts[0].text;
 
-      const wrappedContent = wrapAnsi(content, Math.max(10, width - prefixLen - 6), {
-        hard: true,
-        trim: false,
-      });
-      const contentLines = wrappedContent.split('\n');
-
-      contentLines.forEach((lineText, idx) => {
+      if (isNarrow) {
+        // Adaptive Stacked Layout for Narrow Screens
         allLines.push(
-          <Box key={`t${turnIdx}-l${idx}`} flexDirection="row">
-            {idx === 0 ? (
-              <Text color={isUser ? '#50fa7b' : theme.colors.primary} bold>
-                {prefix}
-              </Text>
-            ) : (
-              <Text>{' '.repeat(prefixLen)}</Text>
-            )}
-            <Text> {renderRichLine(lineText, isUser, theme)}</Text>
+          <Box key={`t${turnIdx}-prefix`} paddingLeft={1}>
+            <Text color={isUser ? '#50fa7b' : theme.colors.primary} bold underline>
+              {prefix.trim()}
+            </Text>
           </Box>
         );
-      });
+
+        const wrappedContent = wrapAnsi(content, Math.max(10, width - 4), {
+          hard: true,
+          trim: false,
+        });
+        const contentLines = wrappedContent.split('\n');
+
+        contentLines.forEach((lineText, idx) => {
+          allLines.push(
+            <Box key={`t${turnIdx}-l${idx}`} paddingLeft={2}>
+              <Text>{renderRichLine(lineText, isUser, theme)}</Text>
+            </Box>
+          );
+        });
+      } else {
+        // Standard Side-by-Side Layout
+        const wrapWidth = Math.max(10, width - prefixLen - 8);
+        const wrappedContent = wrapAnsi(content, wrapWidth, {
+          hard: true,
+          trim: false,
+        });
+        const contentLines = wrappedContent.split('\n');
+
+        contentLines.forEach((lineText, idx) => {
+          allLines.push(
+            <Box key={`t${turnIdx}-l${idx}`} flexDirection="row">
+              {idx === 0 ? (
+                <Text color={isUser ? '#50fa7b' : theme.colors.primary} bold>
+                  {prefix}
+                </Text>
+              ) : (
+                <Text>{' '.repeat(prefixLen)}</Text>
+              )}
+              <Text> {renderRichLine(lineText, isUser, theme)}</Text>
+            </Box>
+          );
+        });
+      }
 
       if (turnIdx < history.length - 1 || isThinking || streamText) {
         allLines.push(<Box key={`gap-${turnIdx}`} height={1} />);
@@ -377,26 +406,51 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
     const prefixLen = prefix.length;
 
     if (streamText) {
-      const wrappedStream = wrapAnsi(streamText, Math.max(10, width - prefixLen - 6), {
-        hard: true,
-        trim: false,
-      });
-      const streamLines = wrappedStream.split('\n');
-
-      streamLines.forEach((lineText, idx) => {
+      if (isNarrow) {
         allLines.push(
-          <Box key={`stream-l${idx}`} flexDirection="row">
-            {idx === 0 ? (
-              <Text color={theme.colors.primary} bold>
-                {prefix}
-              </Text>
-            ) : (
-              <Text>{' '.repeat(prefixLen)}</Text>
-            )}
-            <Text> {renderRichLine(lineText, false, theme)}</Text>
+          <Box key="stream-prefix" paddingLeft={1}>
+            <Text color={theme.colors.primary} bold underline>
+              TermChat AI:
+            </Text>
           </Box>
         );
-      });
+
+        const wrappedStream = wrapAnsi(streamText, Math.max(10, width - 4), {
+          hard: true,
+          trim: false,
+        });
+        const streamLines = wrappedStream.split('\n');
+
+        streamLines.forEach((lineText, idx) => {
+          allLines.push(
+            <Box key={`stream-l${idx}`} paddingLeft={2}>
+              <Text>{renderRichLine(lineText, false, theme)}</Text>
+            </Box>
+          );
+        });
+      } else {
+        const wrapWidth = Math.max(10, width - prefixLen - 8);
+        const wrappedStream = wrapAnsi(streamText, wrapWidth, {
+          hard: true,
+          trim: false,
+        });
+        const streamLines = wrappedStream.split('\n');
+
+        streamLines.forEach((lineText, idx) => {
+          allLines.push(
+            <Box key={`stream-l${idx}`} flexDirection="row">
+              {idx === 0 ? (
+                <Text color={theme.colors.primary} bold>
+                  {prefix}
+                </Text>
+              ) : (
+                <Text>{' '.repeat(prefixLen)}</Text>
+              )}
+              <Text> {renderRichLine(lineText, false, theme)}</Text>
+            </Box>
+          );
+        });
+      }
     }
 
       if (isThinking && !streamText) {

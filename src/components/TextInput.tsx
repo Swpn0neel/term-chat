@@ -72,14 +72,15 @@ export function TextInput({
       return;
     }
 
-    if (key.backspace || key.delete) {
+    // Handle backspace and delete (including common Windows/Linux control characters)
+    if (key.backspace || key.delete || input === '\x08' || input === '\x7f') {
       const newVal = value.slice(0, -1);
       onChange ? onChange(newVal) : setInternalValue(newVal);
       return;
     }
 
-    if (key.escape) return;
-    if (key.upArrow || key.downArrow || key.tab) return;
+    // Ignore other control characters (e.g. arrows, escape) and escape sequences
+    if (key.escape || key.upArrow || key.downArrow || key.tab || input.charCodeAt(0) < 32) return;
 
     const newVal = value + input;
     onChange ? onChange(newVal) : setInternalValue(newVal);

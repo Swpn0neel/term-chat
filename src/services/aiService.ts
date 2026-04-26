@@ -35,7 +35,14 @@ export class AIService {
   }
 
   private static buildHistory(history: ChatMessage[]) {
-    return history
+    // Limit context to the last 20 messages to keep the AI focused
+    // and avoid irrelevant context from very old messages.
+    const MAX_CONTEXT = 20;
+    const recentHistory = history.length > MAX_CONTEXT 
+      ? history.slice(-MAX_CONTEXT) 
+      : history;
+
+    return recentHistory
       .filter(m => {
         if (m.role === 'user') return true;
         const text = m.parts[0].text;

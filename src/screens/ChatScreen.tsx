@@ -277,7 +277,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                           <Text dimColor color="gray">[{time}] </Text>
                           <Text color={isMe ? myColor : friendColor} bold>
                             {isMe ? 'You' : msg.sender.username}
-                            {msg.isEdited && <Text italic dimColor> (edited)</Text>}:
+                            {msg.isEdited && <Text dimColor> (edited)</Text>}:
                           </Text>
                         </>
                       ) : (

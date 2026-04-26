@@ -84,12 +84,17 @@ function AppShellInput({
       if (!controlledValue) setInternalValue('');
       return;
     }
-    if (key.backspace || key.delete) {
+
+    // Handle backspace and delete (including common Windows/Linux control characters)
+    if (key.backspace || key.delete || input === '\x08' || input === '\x7f') {
       const next = value.slice(0, -1);
       onChange ? onChange(next) : setInternalValue(next);
       return;
     }
-    if (key.escape || key.upArrow || key.downArrow || key.tab) return;
+
+    // Ignore other control characters (e.g. arrows, escape) and escape sequences
+    if (key.escape || key.upArrow || key.downArrow || key.tab || input.charCodeAt(0) < 32) return;
+
     const next = value + input;
     onChange ? onChange(next) : setInternalValue(next);
   });
