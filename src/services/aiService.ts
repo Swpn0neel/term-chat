@@ -26,12 +26,12 @@ export class AIService {
     return 'gemini-2.5-flash';
   }
 
-  private static makeModel(apiKey: string, modelId?: string) {
+  private static makeModel(apiKey: string, modelId?: string, systemInstruction?: string) {
     const model = modelId || this.getDefaultModel();
     const genAI = new GoogleGenerativeAI(apiKey);
     return genAI.getGenerativeModel({
       model,
-      systemInstruction: SYSTEM_INSTRUCTION,
+      systemInstruction: systemInstruction || SYSTEM_INSTRUCTION,
     });
   }
 
@@ -117,7 +117,8 @@ export class AIService {
     content: string,
     history: ChatMessage[] = [],
     userApiKey?: string,
-    modelId?: string
+    modelId?: string,
+    systemInstruction?: string
   ) {
     const apiKey = userApiKey || process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === 'your-gemini-key') {
@@ -125,7 +126,7 @@ export class AIService {
     }
 
     try {
-      const userModel = this.makeModel(apiKey, modelId);
+      const userModel = this.makeModel(apiKey, modelId, systemInstruction);
       const chat = userModel.startChat({
         history: this.buildHistory(history),
         generationConfig: { maxOutputTokens: 4096 },

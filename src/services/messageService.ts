@@ -4,7 +4,7 @@ export class MessageService {
   /**
    * Send a private message to a friend
    */
-  static async sendMessage(senderId: string, receiverId: string, content: string) {
+  static async sendMessage(senderId: string, receiverId: string, content: string, isAIGenerated = false) {
     if (!content.trim()) {
       throw new Error('Message content cannot be empty.');
     }
@@ -14,6 +14,7 @@ export class MessageService {
         senderId,
         receiverId,
         content: content.trim(),
+        model: isAIGenerated ? 'ai-generated' : undefined,
       },
     });
   }
@@ -79,7 +80,7 @@ export class MessageService {
   /**
    * Send a message to a group
    */
-  static async sendGroupMessage(senderId: string, groupId: string, content: string) {
+  static async sendGroupMessage(senderId: string, groupId: string, content: string, isAIGenerated = false) {
     if (!content.trim()) {
       throw new Error('Message content cannot be empty.');
     }
@@ -95,6 +96,7 @@ export class MessageService {
         senderId,
         groupId,
         content: content.trim(),
+        model: isAIGenerated ? 'ai-generated' : undefined,
       },
     });
 

@@ -6,6 +6,7 @@ import { AppShell } from '@/components/AppShell';
 import { Spinner } from '@/components/Spinner';
 import { MessageService } from '@/services/messageService';
 import { SocialService } from '@/services/socialService';
+import { AIService } from '@/services/aiService';
 import { prisma } from '@/lib/prisma';
 
 import { Heading } from '@/components/Heading';
@@ -86,6 +87,44 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
     if (!userMessage || isSending || !isFriend) return;
 
 
+
+    // Handle AI commands
+    if (userMessage.toLowerCase().startsWith('/ai ')) {
+      const prompt = userMessage.slice(4).trim();
+      if (!prompt) return;
+
+      if (!user.geminiApiKey) {
+        setMessages(prev => [...prev, {
+          id: 'ai-error-' + Date.now(),
+          content: "You haven't set your Gemini API key. Use '/set [key]' in AI Chat to enable this.",
+          type: 'SYSTEM',
+          createdAt: new Date(),
+          sender: { username: 'System' }
+        }]);
+        setNewMessage('');
+        return;
+      }
+
+      setIsSending(true);
+      setNewMessage('');
+      try {
+        const instruction = 'You are TermChat AI. Your response MUST be a single paragraph of plain text ONLY. ABSOLUTELY NO markdown, no bolding, no italics, no lists, and no line breaks. Keep it concise, friendly, and readable.';
+        const response = await AIService.sendChatMessage(prompt, [], user.geminiApiKey, 'gemini-2.5-flash-lite', instruction);
+        await MessageService.sendMessage(user.id, friendId, response, true);
+        await fetchConversation();
+      } catch (err: any) {
+        setMessages(prev => [...prev, {
+          id: 'ai-error-' + Date.now(),
+          content: `AI Error: ${err.message}`,
+          type: 'SYSTEM',
+          createdAt: new Date(),
+          sender: { username: 'System' }
+        }]);
+      } finally {
+        setIsSending(false);
+      }
+      return;
+    }
 
     // Handle delete commands
     if (userMessage.toLowerCase().startsWith('/delete')) {
@@ -179,7 +218,10 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
     }
   };
 
+  const [isOverlayActive, setIsOverlayActive] = useState(false);
+
   useInput((_input, key) => {
+    if (isOverlayActive) return;
     if (key.upArrow) {
       setScrollOffset(s => s + 1);
     } else if (key.downArrow) {
@@ -188,6 +230,13 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
       navigate('friend-list');
     }
   });
+
+  const commands = [
+    { name: '/color', description: 'change your color in chat', value: '/color' },
+    { name: '/ai [prompt]', description: 'ask ai (requires gemini key)', value: '/ai' },
+    { name: '/delete [n|all]', description: 'delete your messages, n = msg no', value: '/delete' },
+    { name: '/edit [n] [new message]', description: 'edit your message, n = msg no', value: '/edit' }
+  ];
 
   return (
     <AppShell>
@@ -220,7 +269,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           )}
         </Box>
       </AppShell.Header>
-      <AppShell.Content height={stdout?.rows ? Math.max(10, stdout.rows - 7) : 20}>
+      <AppShell.Content>
         {isLoading && messages.length === 0 ? (
           <Box padding={1}>
             <Spinner label="Loading conversation history..." />
@@ -239,6 +288,8 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
 
               let lastDate = '';
               let lastSenderId = '';
+              let lastMessageType = '';
+              
               const allLines: React.ReactNode[] = [];
 
               messages.forEach((msg, msgIdx) => {
@@ -246,7 +297,9 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                 const isSameSender = msg.senderId === lastSenderId;
                 
                 if (dateStr !== lastDate) {
-                  allLines.push(<Box key={`gap-${msg.id}`} height={1} flexShrink={0} />);
+                  if (msgIdx > 0) {
+                    allLines.push(<Box key={`date-gap-pre-${msg.id}`} height={1} flexShrink={0} />);
+                  }
                   allLines.push(
                     <Box key={`date-${msg.id}`} width="100%" justifyContent="center" flexShrink={0}>
                       <Text color="gray" dimColor>── {dateStr} ──</Text>
@@ -255,10 +308,32 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                   allLines.push(<Box key={`date-gap-${msg.id}`} height={1} flexShrink={0} />);
                   lastDate = dateStr;
                   lastSenderId = ''; // Reset grouping on new date
-                } else if (!isSameSender && msgIdx > 0) {
+                  lastMessageType = '';
+                } else if (msg.type !== 'SYSTEM' && lastMessageType !== 'SYSTEM' && !isSameSender && msgIdx > 0) {
                   // Regular gap between different users on the same day
                   allLines.push(<Box key={`gap-${msg.id}`} height={1} flexShrink={0} />);
+                } else if (msg.type !== 'SYSTEM' && lastMessageType === 'SYSTEM') {
+                  // Gap between system and user message
+                  allLines.push(<Box key={`sys-user-gap-${msg.id}`} height={1} flexShrink={0} />);
+                } else if (msg.type === 'SYSTEM' && lastMessageType !== 'SYSTEM' && msgIdx > 0) {
+                  // Gap between user and system message
+                  allLines.push(<Box key={`user-sys-gap-${msg.id}`} height={1} flexShrink={0} />);
                 }
+
+                if (msg.type === 'SYSTEM') {
+                  allLines.push(
+                    <Box key={msg.id} width="100%" justifyContent="center" paddingY={0}>
+                      <Text color="gray" italic>
+                        {msg.content}
+                      </Text>
+                    </Box>
+                  );
+                  lastSenderId = ''; // Reset grouping after system message
+                  lastMessageType = 'SYSTEM';
+                  return;
+                }
+                
+                lastMessageType = 'USER';
 
                 const isMe = msg.senderId === user.id;
                 const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -271,9 +346,10 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                 const friendColor = (isMeSender ? friendship?.receiverColor : friendship?.senderColor) || theme.colors.primary;
                 const userColor = isMe ? myColor : friendColor;
 
-                const contentWidth = Math.max(10, width - indent - 4);
+                const isAI = msg.model === 'ai-generated';
+                const suffix = (msg.isEdited ? ' (edited)' : '') + (isAI ? ' (ai-generated)' : '');
+                const contentWidth = Math.max(10, width - indent - 6 - suffix.length);
                 
-                const editedMarker = msg.isEdited ? ' (edited)' : '';
                 const wrappedContent = wrapAnsi(msg.content, contentWidth, { hard: true, trim: false });
                 const contentLines = wrappedContent.split('\n');
 
@@ -294,6 +370,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                         <Text>{' '.repeat(indent)}</Text>
                         <Text>{lineText}</Text>
                         {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
+                        {isLastLine && isAI && <Text dimColor italic> (ai-generated)</Text>}
                       </Box>
                     );
                   });
@@ -303,13 +380,10 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                     const isLastLine = idx === contentLines.length - 1;
                     allLines.push(
                       <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
-                        {idx === 0 ? (
-                          <Text dimColor color="gray">{timePrefix}</Text>
-                        ) : (
-                          <Text>{' '.repeat(indent)}</Text>
-                        )}
+                        <Text dimColor color="gray">{idx === 0 ? timePrefix : ' '.repeat(indent)}</Text>
                         <Text>{lineText}</Text>
                         {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
+                        {isLastLine && isAI && <Text dimColor italic> (ai-generated)</Text>}
                       </Box>
                     );
                   });
@@ -353,9 +427,11 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           onSubmit={handleSend}
           borderStyle="single"
           borderColor="#50fa7b"
+          commands={commands}
+          onOverlayActiveChange={setIsOverlayActive}
         />
       )}
-      <AppShell.Hints items={['/color: change color', '/delete [n|all]: Delete', '/edit [n] [msg]: Edit', 'Enter: Send', '↑↓: Scroll', 'Esc: Back']} />
+      <AppShell.Hints items={['enter: ask', '↑↓: scroll', 'esc: back', '/: options menu']} />
     </AppShell>
   );
 }

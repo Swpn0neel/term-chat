@@ -1,4 +1,4 @@
-import { type ReactNode, useState, useEffect } from 'react';
+import React, { type ReactNode, useState, useEffect, useMemo } from 'react';
 import { Box, Text, useStdout } from 'ink';
 import { useInput, useTheme } from '@/lib/theme';
 import { session } from '@/lib/session';
@@ -24,6 +24,8 @@ export interface AppShellInputProps {
   borderStyle?: 'single' | 'double' | 'round' | 'bold';
   borderColor?: string;
   prefix?: string;
+  commands?: { name: string; description: string; value?: string }[];
+  onOverlayActiveChange?: (isActive: boolean) => void;
 }
 
 export interface AppShellContentProps {
@@ -73,15 +75,64 @@ function AppShellInput({
   borderStyle = 'single',
   borderColor,
   prefix = '>',
+  commands = [],
+  onOverlayActiveChange,
 }: AppShellInputProps) {
   const [internalValue, setInternalValue] = useState('');
   const theme = useTheme();
   const value = controlledValue ?? internalValue;
 
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const activeCommands = useMemo(() => {
+    if (!commands || commands.length === 0 || !value.startsWith('/')) return [];
+    const search = value.toLowerCase();
+    return commands.filter(c => c.name.toLowerCase().startsWith(search));
+  }, [commands, value]);
+
+  const showOverlay = activeCommands.length > 0;
+
+  // Reset selection when the search changes or becomes invalid
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [activeCommands.length, value.split(' ')[0]]);
+
+  useEffect(() => {
+    onOverlayActiveChange?.(showOverlay);
+  }, [showOverlay, onOverlayActiveChange]);
+
+  const MAX_VISIBLE = 5;
+  const startVisibleIndex = Math.max(0, Math.min(
+    selectedIndex - Math.floor(MAX_VISIBLE / 2),
+    activeCommands.length - MAX_VISIBLE
+  ));
+  const visibleCommands = activeCommands.slice(startVisibleIndex, startVisibleIndex + MAX_VISIBLE);
+
   useInput((input, key) => {
+    if (showOverlay) {
+      if (key.upArrow) {
+        setSelectedIndex(s => Math.max(0, s - 1));
+        return;
+      }
+      if (key.downArrow) {
+        setSelectedIndex(s => Math.min(activeCommands.length - 1, s + 1));
+        return;
+      }
+      if (key.return || key.tab) {
+        const cmd = activeCommands[selectedIndex];
+        if (cmd) {
+          const next = (cmd.value || cmd.name.split(' ')[0]) + ' ';
+          onChange ? onChange(next) : setInternalValue(next);
+          setSelectedIndex(0);
+        }
+        return;
+      }
+    }
+
     if (key.return) {
       onSubmit?.(value);
       if (!controlledValue) setInternalValue('');
+      setSelectedIndex(0);
       return;
     }
 
@@ -100,19 +151,62 @@ function AppShellInput({
   });
 
   return (
-    <Box
-      borderStyle={borderStyle === 'round' ? 'single' : borderStyle}
-      borderColor={borderColor ?? theme.colors.border}
-      flexDirection="row"
-      paddingX={1}
-    >
-      {prefix && (
-        <Text color={theme.colors.primary} bold>
-          {prefix + ' '}
-        </Text>
+    <Box flexDirection="column" width="100%" flexShrink={0}>
+      {showOverlay && (
+        <Box 
+          flexDirection="column" 
+          paddingX={1} 
+          paddingY={0}
+          borderStyle="single" 
+          borderColor={theme.colors.border}
+          borderBottom={false}
+          width="100%"
+        >
+          {visibleCommands.map((cmd, i) => {
+            const actualIndex = startVisibleIndex + i;
+            const isSelected = actualIndex === selectedIndex;
+            return (
+              <Box key={cmd.name} flexDirection="row" width="100%" overflow="hidden">
+                <Text 
+                  color={isSelected ? theme.colors.background : theme.colors.foreground} 
+                  backgroundColor={isSelected ? theme.colors.primary : undefined}
+                  wrap="truncate-end"
+                >
+                  {cmd.name} 
+                </Text>
+                <Text 
+                  color={isSelected ? theme.colors.background : 'gray'} 
+                  backgroundColor={isSelected ? theme.colors.primary : undefined}
+                  wrap="truncate-end"
+                >
+                  {' '}- {cmd.description}
+                </Text>
+              </Box>
+            );
+          })}
+          {activeCommands.length > MAX_VISIBLE && (
+            <Box justifyContent="center" width="100%">
+              <Text dimColor>
+                {selectedIndex + 1} of {activeCommands.length} (↑↓ to scroll)
+              </Text>
+            </Box>
+          )}
+        </Box>
       )}
-      <Text>{value || <Text dimColor>{placeholder}</Text>}</Text>
-      <Text color={theme.colors.focusRing}>{'█'}</Text>
+      <Box
+        borderStyle={borderStyle === 'round' ? 'single' : borderStyle}
+        borderColor={borderColor ?? theme.colors.border}
+        flexDirection="row"
+        paddingX={1}
+      >
+        {prefix && (
+          <Text color={theme.colors.primary} bold>
+            {prefix + ' '}
+          </Text>
+        )}
+        <Text>{value || <Text dimColor>{placeholder}</Text>}</Text>
+        <Text color={theme.colors.focusRing}>{'█'}</Text>
+      </Box>
     </Box>
   );
 }

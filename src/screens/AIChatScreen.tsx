@@ -132,7 +132,7 @@ export default function AIChatScreen({ user, navigate }: any) {
                 text:
                   `Current model: ${info.name} (${currentModel}).\nAvailable models:\n` +
                   AVAILABLE_MODELS.map(m => `  /model ${m.name.toLowerCase().replace(/\s+/g, '')} - ${m.description}`).join('\n') +
-                  '\n\nUse /model <name> to switch (e.g. /model flash, /model pro)',
+                  '\n\nUse /model <name> to switch (e.g. /model flash, /model pro, /model flash-lite)',
               },
             ],
             createdAt: new Date(),
@@ -223,7 +223,10 @@ export default function AIChatScreen({ user, navigate }: any) {
     }
   };
 
+  const [isOverlayActive, setIsOverlayActive] = useState(false);
+
   useInput((_input, key) => {
+    if (isOverlayActive) return;
     if (key.upArrow) {
       setScrollOffset(s => s + 1);
     } else if (key.downArrow) {
@@ -234,8 +237,15 @@ export default function AIChatScreen({ user, navigate }: any) {
     }
   });
 
+  const commands = [
+    { name: '/model flash', description: 'Switch to Gemini Flash' },
+    { name: '/model pro', description: 'Switch to Gemini Pro' },
+    { name: '/model flash-lite', description: 'Switch to Gemini Flash Lite' },
+    { name: '/clear', description: 'Clear conversation history' },
+    { name: '/set', description: 'Set or Update API Key (/set [key])' }
+  ];
+
   const modelInfo = AIService.getModelInfo(currentModel);
-  const contentHeight = stdout?.rows ? Math.max(10, stdout.rows - 7) : 17;
   const contentRows = stdout?.rows || 24;
 
   return (
@@ -246,7 +256,7 @@ export default function AIChatScreen({ user, navigate }: any) {
           <Text dimColor> · {modelInfo.name}</Text>
         </Box>
       </AppShell.Header>
-      <AppShell.Content height={contentHeight}>
+      <AppShell.Content>
         {isLoading && history.length === 0 ? (
           <Box padding={1}>
             <Spinner label="Loading conversation history..." />
@@ -270,9 +280,11 @@ export default function AIChatScreen({ user, navigate }: any) {
         onSubmit={handleSubmit}
         borderStyle="single"
         borderColor="#50fa7b"
+        commands={commands}
+        onOverlayActiveChange={setIsOverlayActive}
       />
       <AppShell.Hints
-        items={['Enter: Ask', '↑↓: Scroll', 'Esc: Back', '/model: Switch model', '/clear: Clear', '/set [key]: Set API Key']}
+        items={['enter: ask', '↑↓: scroll', 'esc: back', '/: options menu']}
       />
     </AppShell>
   );
@@ -347,8 +359,10 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
   if (history.length > 0) {
     history.forEach((turn, turnIdx) => {
       const isUser = turn.role === 'user';
-      const isSameSender = turn.role === lastRole;
       const content = turn.parts[0].text;
+      const isSystem = content.startsWith('System: ');
+      const isSameSender = !isSystem && turn.role === lastRole;
+      const displayContent = isSystem ? content.substring(8) : content;
       const time = turn.createdAt ? new Date(turn.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
       const timePrefix = `[${time}] `;
       const indent = timePrefix.length;
@@ -361,7 +375,7 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
       }
 
       const contentWidth = Math.max(10, width - indent - 4);
-      const wrappedContent = wrapAnsi(content, contentWidth, { hard: true, trim: false });
+      const wrappedContent = wrapAnsi(displayContent, contentWidth, { hard: true, trim: false });
       const contentLines = wrappedContent.split('\n');
 
       if (!isSameSender) {
@@ -397,7 +411,7 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
         });
       }
 
-      lastRole = turn.role;
+      lastRole = isSystem ? '' : turn.role;
     });
   }
 
