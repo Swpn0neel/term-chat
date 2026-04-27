@@ -7,8 +7,10 @@ import { Heading } from '@/components/Heading';
 import { Title } from '@/components/Title';
 import { ClackSelect, ClackOption } from '@/components/Menu';
 import { usePolling } from '@/contexts/PollingContext';
+import { useTheme } from '@/lib/theme';
 
 export default function GroupListScreen({ user, navigate, unreadCounts = {} }: any) {
+  const theme = useTheme();
   const { screenData } = usePolling();
   const groups = screenData?.groups || [];
   const isLoading = !screenData?.groups;
@@ -40,7 +42,7 @@ export default function GroupListScreen({ user, navigate, unreadCounts = {} }: a
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor="#50fa7b" paddingX={1} marginTop={1}>
+          <Box borderStyle="single" borderColor={theme.colors.secondary} paddingX={1} marginTop={1}>
             <Text bold>Group Chats</Text>
           </Box>
         </Box>

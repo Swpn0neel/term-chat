@@ -9,10 +9,12 @@ import { TextInput } from '@/components/TextInput';
 import { getPendingTransfers, acceptTransfer, declineTransfer } from '@/services/fileTransferService';
 import { usePolling } from '@/contexts/PollingContext';
 import prettyBytes from 'pretty-bytes';
+import { useTheme } from '@/lib/theme';
 
 type Stage = 'LIST' | 'ACTIONS' | 'DESTINATION' | 'DOWNLOADING' | 'DONE' | 'ERROR';
 
 export default function InboxScreen({ user, navigate }: any) {
+  const theme = useTheme();
   const { screenData, triggerImmediatePoll } = usePolling();
   const transfers = screenData?.transfers || [];
   const isLoading = !screenData?.transfers;
@@ -86,7 +88,7 @@ export default function InboxScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor="#50fa7b" paddingX={1} marginTop={1}>
+          <Box borderStyle="single" borderColor={theme.colors.secondary} paddingX={1} marginTop={1}>
             <Text bold>File Inbox</Text>
           </Box>
         </Box>
@@ -165,7 +167,7 @@ export default function InboxScreen({ user, navigate }: any) {
                 Saved to: {savedPath}
               </Alert>
               <Box marginTop={1}>
-                <Text color="yellow">Press Esc to go back</Text>
+                <Text color={theme.colors.warning}>Press Esc to go back</Text>
               </Box>
             </Box>
           )}
@@ -176,7 +178,7 @@ export default function InboxScreen({ user, navigate }: any) {
                 {error}
               </Alert>
               <Box marginTop={1}>
-                <Text color="yellow">Press Esc to go back</Text>
+                <Text color={theme.colors.warning}>Press Esc to go back</Text>
               </Box>
             </Box>
           )}
@@ -190,10 +192,11 @@ export default function InboxScreen({ user, navigate }: any) {
 
 function ProgressBar({ pct }: { pct: number }) {
   const width = 20;
+  const theme = useTheme();
   const filled = Math.round((pct / 100) * width);
   const empty = width - filled;
   return (
-    <Text color="cyan">
+    <Text color={theme.colors.info}>
       {'█'.repeat(filled)}
       {'░'.repeat(empty)}
     </Text>

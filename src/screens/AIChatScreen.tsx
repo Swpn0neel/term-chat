@@ -238,11 +238,11 @@ export default function AIChatScreen({ user, navigate }: any) {
   });
 
   const commands = [
-    { name: '/model flash', description: 'Switch to Gemini Flash' },
-    { name: '/model pro', description: 'Switch to Gemini Pro' },
-    { name: '/model flash-lite', description: 'Switch to Gemini Flash Lite' },
-    { name: '/clear', description: 'Clear conversation history' },
-    { name: '/set', description: 'Set or Update API Key (/set [key])' }
+    { name: '/model flash', description: 'Switch to Gemini Flash', value: '/model flash' },
+    { name: '/model pro', description: 'Switch to Gemini Pro', value: '/model pro' },
+    { name: '/model flash-lite', description: 'Switch to Gemini Flash Lite', value: '/model flash-lite' },
+    { name: '/clear', description: 'Clear conversation history', value: '/clear' },
+    { name: '/set', description: 'Set or Update API Key (/set [key])', value: '/set' }
   ];
 
   const modelInfo = AIService.getModelInfo(currentModel);
@@ -251,7 +251,7 @@ export default function AIChatScreen({ user, navigate }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="#50fa7b" flexDirection="row">
+        <Box paddingX={1} borderStyle="single" borderColor={theme.colors.secondary} flexDirection="row">
           <Heading level={1}>AI Assistant</Heading>
           <Text dimColor> · {modelInfo.name}</Text>
         </Box>
@@ -279,12 +279,12 @@ export default function AIChatScreen({ user, navigate }: any) {
         onChange={setInput}
         onSubmit={handleSubmit}
         borderStyle="single"
-        borderColor="#50fa7b"
+        borderColor={theme.colors.secondary}
         commands={commands}
         onOverlayActiveChange={setIsOverlayActive}
       />
       <AppShell.Hints
-        items={['enter: ask', '↑↓: scroll', 'esc: back', '/: options menu']}
+        items={['enter: ask', '↑↓: scroll', 'esc: back', '/: options']}
       />
     </AppShell>
   );
@@ -309,7 +309,7 @@ function renderRichLine(text: string, isUser: boolean, theme: any) {
     if (match) {
       return (
         <Text>
-          Current model: <Text color="#50fa7b" bold>{match[1]}</Text> <Text dimColor>({match[2]})</Text>.
+          Current model: <Text color={theme.colors.secondary} bold>{match[1]}</Text> <Text dimColor>({match[2]})</Text>.
         </Text>
       );
     }
@@ -320,7 +320,7 @@ function renderRichLine(text: string, isUser: boolean, theme: any) {
     const [cmd, ...rest] = text.split(' - ');
     return (
       <Text>
-        <Text color="#f1fa8c">{cmd}</Text>
+        <Text color={theme.colors.warning}>{cmd}</Text>
         <Text dimColor> - {rest.join(' - ')}</Text>
       </Text>
     );
@@ -335,7 +335,7 @@ function renderRichLine(text: string, isUser: boolean, theme: any) {
   if (text.startsWith('System:')) {
     return (
       <Text>
-        <Text color="#ffb86c" bold>System:</Text>
+        <Text color={theme.colors.warning} bold>System:</Text>
         <Text>{text.substring(7)}</Text>
       </Text>
     );
@@ -368,7 +368,7 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
       const indent = timePrefix.length;
       
       const prefix = isUser ? 'You: ' : 'TermChat AI: ';
-      const userColor = isUser ? '#50fa7b' : theme.colors.primary;
+      const userColor = isUser ? theme.colors.success : theme.colors.secondary;
 
       if (!isSameSender && turnIdx > 0) {
         allLines.push(<Box key={`gap-${turnIdx}`} height={1} flexShrink={0} />);
@@ -382,7 +382,7 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
         // New sender header
         allLines.push(
           <Box key={`t${turnIdx}-header`} flexDirection="row" flexShrink={0}>
-            <Text dimColor color="gray">{timePrefix}</Text>
+            <Text dimColor color={theme.colors.mutedForeground}>{timePrefix}</Text>
             <Text color={userColor} bold>{prefix}</Text>
           </Box>
         );
@@ -401,7 +401,7 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
           allLines.push(
             <Box key={`t${turnIdx}-l${idx}`} flexDirection="row" flexShrink={0}>
               {idx === 0 ? (
-                <Text dimColor color="gray">{timePrefix}</Text>
+                <Text dimColor color={theme.colors.mutedForeground}>{timePrefix}</Text>
               ) : (
                 <Text>{' '.repeat(indent)}</Text>
               )}
@@ -420,7 +420,7 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const timePrefix = `[${time}] `;
     const indent = timePrefix.length;
-    const userColor = theme.colors.primary;
+    const userColor = theme.colors.secondary;
     const contentWidth = Math.max(10, width - indent - 4);
 
     if (!isSameSender && history.length > 0) {
@@ -434,7 +434,7 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
       if (!isSameSender) {
         allLines.push(
           <Box key="stream-header" flexDirection="row" flexShrink={0}>
-            <Text dimColor color="gray">{timePrefix}</Text>
+            <Text dimColor color={theme.colors.mutedForeground}>{timePrefix}</Text>
             <Text color={userColor} bold>TermChat AI: </Text>
           </Box>
         );
@@ -451,7 +451,7 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
           allLines.push(
             <Box key={`stream-l${idx}`} flexDirection="row" flexShrink={0}>
               {idx === 0 ? (
-                <Text dimColor color="gray">{timePrefix}</Text>
+                <Text dimColor color={theme.colors.mutedForeground}>{timePrefix}</Text>
               ) : (
                 <Text>{' '.repeat(indent)}</Text>
               )}

@@ -30,7 +30,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor="#50fa7b" paddingX={1} marginTop={1}>
+          <Box borderStyle="single" borderColor={theme.colors.secondary} paddingX={1} marginTop={1}>
             <Text bold>My Friends</Text>
           </Box>
         </Box>

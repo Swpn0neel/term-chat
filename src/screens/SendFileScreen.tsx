@@ -13,10 +13,12 @@ import { TextInput } from '@/components/TextInput';
 import { SocialService } from '@/services/socialService';
 import { zipFolder, uploadToR2, createTransferRecord } from '@/services/fileTransferService';
 import { generateR2Key } from '@/lib/r2';
+import { useTheme } from '@/lib/theme';
 
 type Stage = 'PATH' | 'RECIPIENTS' | 'UPLOADING' | 'DONE' | 'ERROR';
 
 export default function SendFileScreen({ user, navigate }: any) {
+  const theme = useTheme();
   const [stage, setStage] = useState<Stage>('PATH');
   const [filePath, setFilePath] = useState('');
   const [isFolder, setIsFolder] = useState(false);
@@ -118,7 +120,7 @@ export default function SendFileScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor="#50fa7b" paddingX={1} marginTop={1}>
+          <Box borderStyle="single" borderColor={theme.colors.secondary} paddingX={1} marginTop={1}>
             <Text bold>Send File</Text>
           </Box>
         </Box>
@@ -136,7 +138,7 @@ export default function SendFileScreen({ user, navigate }: any) {
                 You need to add friends before you can send files!
               </Alert>
               <Box marginTop={1}>
-                <Text color="yellow">Press Esc to return to the dashboard and add some friends.</Text>
+                <Text color={theme.colors.warning}>Press Esc to return to the dashboard and add some friends.</Text>
               </Box>
             </Box>
           ) : (
@@ -208,7 +210,7 @@ export default function SendFileScreen({ user, navigate }: any) {
                 {error}
               </Alert>
               <Box marginTop={1}>
-                <Text color="yellow">Press Esc to go back</Text>
+                <Text color={theme.colors.warning}>Press Esc to go back</Text>
               </Box>
             </Box>
           )}
@@ -222,10 +224,11 @@ export default function SendFileScreen({ user, navigate }: any) {
 
 function ProgressBar({ pct }: { pct: number }) {
   const width = 20;
+  const theme = useTheme();
   const filled = Math.round((pct / 100) * width);
   const empty = width - filled;
   return (
-    <Text color="cyan">
+    <Text color={theme.colors.info}>
       {'█'.repeat(filled)}
       {'░'.repeat(empty)}
     </Text>

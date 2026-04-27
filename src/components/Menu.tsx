@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useTheme } from '@/lib/theme';
 
@@ -52,6 +52,23 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
     }
   });
 
+  const VISIBLE_COUNT = 8;
+  const [startIndex, setStartIndex] = useState(0);
+
+  useEffect(() => {
+    if (options.length <= VISIBLE_COUNT) {
+      setStartIndex(0);
+      return;
+    }
+    if (activeIndex < startIndex) {
+      setStartIndex(activeIndex);
+    } else if (activeIndex >= startIndex + VISIBLE_COUNT) {
+      setStartIndex(activeIndex - VISIBLE_COUNT + 1);
+    }
+  }, [activeIndex, startIndex, options.length]);
+
+  const visibleOptions = options.slice(startIndex, startIndex + VISIBLE_COUNT);
+
   return (
     <Box flexDirection="column" width="100%">
       {/* Question / Label */}
@@ -61,37 +78,42 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
       </Box>
       
       {/* Spacer vertical line */}
-      <Text color="gray">  │</Text>
+      <Text color={theme.colors.mutedForeground}>  │ {startIndex > 0 ? "↑" : ""}</Text>
       
       {/* Options */}
-      {options.map((option, index) => {
+      {visibleOptions.map((option, mappedIndex) => {
+        const index = startIndex + mappedIndex;
         const isActive = index === activeIndex;
         
         const optionBox = option.isSpacer ? (
           <Box key={option.value} flexDirection="row">
             <Box flexShrink={0} width={4}>
-              <Text color="gray">  │ </Text>
+              <Text color={theme.colors.mutedForeground}>  │ </Text>
             </Box>
-            <Text color="gray" italic dimColor wrap="truncate-end">{option.label}</Text>
+            <Text color={theme.colors.mutedForeground} italic dimColor wrap="truncate-end">{option.label}</Text>
           </Box>
         ) : (
           <Box key={option.value} flexDirection="row" width="100%">
             <Box flexShrink={0} width={8}>
-              <Text color="gray">  │ </Text>
-              <Text color={isActive ? theme.colors.primary : "gray"}>
+              <Text color={theme.colors.mutedForeground}>  │ </Text>
+              <Text color={isActive ? theme.colors.secondary : theme.colors.mutedForeground}>
                 {isActive ? "● " : "○ "}
               </Text>
             </Box>
             <Box flexGrow={1}>
-              <Text color={isActive ? "#50fa7b" : "gray"} wrap="truncate-end">
+              <Text color={isActive ? theme.colors.secondary : theme.colors.mutedForeground} wrap="truncate-end">
                 {option.label}
               </Text>
             </Box>
             {option.hint && (
               <Box flexShrink={0} marginLeft={2}>
-                <Text color="gray" dimColor>
-                  {option.hint}
-                </Text>
+                {typeof option.hint === 'string' || typeof option.hint === 'number' ? (
+                  <Text color={theme.colors.mutedForeground} dimColor>
+                    {option.hint}
+                  </Text>
+                ) : (
+                  option.hint
+                )}
               </Box>
             )}
           </Box>
@@ -99,11 +121,14 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
 
         return (
           <React.Fragment key={option.value}>
-            {index > 0 && <Text color="gray">  │</Text>}
+            {mappedIndex > 0 && <Text color={theme.colors.mutedForeground}>  │</Text>}
             {optionBox}
           </React.Fragment>
         );
       })}
+      {startIndex + VISIBLE_COUNT < options.length && (
+        <Text color={theme.colors.mutedForeground}>  │ ↓</Text>
+      )}
     </Box>
   );
 };
@@ -158,6 +183,23 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
     }
   });
 
+  const VISIBLE_COUNT = 8;
+  const [startIndex, setStartIndex] = useState(0);
+
+  useEffect(() => {
+    if (options.length <= VISIBLE_COUNT) {
+      setStartIndex(0);
+      return;
+    }
+    if (activeIndex < startIndex) {
+      setStartIndex(activeIndex);
+    } else if (activeIndex >= startIndex + VISIBLE_COUNT) {
+      setStartIndex(activeIndex - VISIBLE_COUNT + 1);
+    }
+  }, [activeIndex, startIndex, options.length]);
+
+  const visibleOptions = options.slice(startIndex, startIndex + VISIBLE_COUNT);
+
   return (
     <Box flexDirection="column" width="100%">
       {/* Question / Label */}
@@ -167,41 +209,46 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
       </Box>
       
       {/* Spacer vertical line */}
-      <Text color="gray">  │</Text>
+      <Text color={theme.colors.mutedForeground}>  │ {startIndex > 0 ? "↑" : ""}</Text>
       
       {/* Options */}
-      {options.map((option, index) => {
+      {visibleOptions.map((option, mappedIndex) => {
+        const index = startIndex + mappedIndex;
         const isActive = index === activeIndex;
         const isSelected = value.includes(option.value);
 
         const optionBox = option.isSpacer ? (
           <Box key={option.value} flexDirection="row">
             <Box flexShrink={0} width={4}>
-              <Text color="gray">  │ </Text>
+              <Text color={theme.colors.mutedForeground}>  │ </Text>
             </Box>
-            <Text color="gray" italic dimColor wrap="truncate-end">{option.label}</Text>
+            <Text color={theme.colors.mutedForeground} italic dimColor wrap="truncate-end">{option.label}</Text>
           </Box>
         ) : (
           <Box key={option.value} flexDirection="row">
             <Box flexShrink={0} width={10}>
-              <Text color="gray">  │ </Text>
-              <Text color={isActive ? theme.colors.primary : "gray"}>
+              <Text color={theme.colors.mutedForeground}>  │ </Text>
+              <Text color={isActive ? theme.colors.secondary : theme.colors.mutedForeground}>
                 {isActive ? "● " : "  "}
               </Text>
-              <Text color={isSelected ? theme.colors.primary : "gray"} key={isSelected ? 's' : 'u'}>
+              <Text color={isSelected ? theme.colors.secondary : theme.colors.mutedForeground} key={isSelected ? 's' : 'u'}>
                 {isSelected ? "◼ " : "◻ "}
               </Text>
             </Box>
             <Box flexGrow={1}>
-              <Text color={isActive ? "#50fa7b" : "gray"} wrap="truncate-end">
+              <Text color={isActive ? theme.colors.secondary : theme.colors.mutedForeground} wrap="truncate-end">
                 {option.label}
               </Text>
             </Box>
             {option.hint && (
               <Box flexShrink={0} marginLeft={2}>
-                <Text color="gray" dimColor>
-                  {option.hint}
-                </Text>
+                {typeof option.hint === 'string' || typeof option.hint === 'number' ? (
+                  <Text color={theme.colors.mutedForeground} dimColor>
+                    {option.hint}
+                  </Text>
+                ) : (
+                  option.hint
+                )}
               </Box>
             )}
           </Box>
@@ -209,11 +256,14 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
 
         return (
           <React.Fragment key={option.value}>
-            {index > 0 && <Text color="gray">  │</Text>}
+            {mappedIndex > 0 && <Text color={theme.colors.mutedForeground}>  │</Text>}
             {optionBox}
           </React.Fragment>
         );
       })}
+      {startIndex + VISIBLE_COUNT < options.length && (
+        <Text color={theme.colors.mutedForeground}>  │ ↓</Text>
+      )}
     </Box>
   );
 };

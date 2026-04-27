@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ThemeProvider, draculaTheme, useInput } from '@/lib/theme';
+import { ThemeProvider, draculaTheme, useInput, getThemeByName } from '@/lib/theme';
 import AuthScreen from '@/screens/AuthScreen';
 import DashboardScreen from '@/screens/DashboardScreen';
 import AddFriendScreen from '@/screens/AddFriendScreen';
@@ -13,7 +13,9 @@ import AIChatScreen from '@/screens/AIChatScreen';
 import RemoveFriendScreen from '@/screens/RemoveFriendScreen';
 import SendFileScreen from '@/screens/SendFileScreen';
 import InboxScreen from '@/screens/InboxScreen';
+import ChangePasswordScreen from '@/screens/ChangePasswordScreen';
 import { session } from '@/lib/session';
+import { SessionService } from '@/services/sessionService';
 import { AppService } from '@/services/appService';
 import { cleanupExpiredTransfers } from '@/services/fileTransferService';
 import { shutdown } from '@/lib/shutdown';
@@ -23,17 +25,40 @@ export type Screen =
   | 'auth' | 'dashboard' | 'add-friend'
   | 'pending' | 'friend-list' | 'chat' | 'ai-chat' | 'remove-friend'
   | 'group-list' | 'create-group' | 'group-chat'
-  | 'send-file' | 'inbox';
+  | 'send-file' | 'inbox' | 'change-password';
 
 export type NavigateFn = (screen: Screen, params?: Record<string, string>) => void;
 
 function AppContent({
   screen, params, sessionUser, navigate, setSessionUser
 }: {
-  screen: Screen, params: Record<string, string>, sessionUser: any,
-  navigate: NavigateFn, setSessionUser: any
+  screen: Screen, params: Record<string, string>, sessionUser: { id: string; username: string; theme?: string } | null,
+  navigate: NavigateFn, setSessionUser: (user: any) => void
 }) {
   const { setPollData, global, setOnImmediatePoll } = usePolling();
+  const [userTheme, setUserTheme] = useState(() => {
+    const saved = SessionService.getSession();
+    return saved?.themeName ? getThemeByName(saved.themeName) : draculaTheme;
+  });
+
+  // Initial theme from sessionUser
+  useEffect(() => {
+    if (sessionUser?.theme) {
+      setUserTheme(getThemeByName(sessionUser.theme));
+    }
+  }, [sessionUser]);
+
+  // Sync theme from polled data
+  useEffect(() => {
+    if (global.theme) {
+      const t = getThemeByName(global.theme);
+      if (t.name !== userTheme.name) {
+        setUserTheme(t);
+      }
+    }
+  }, [global.theme, userTheme.name]);
+
+  const activeTheme = userTheme;
 
   // Polling Loop
   useEffect(() => {
@@ -115,6 +140,7 @@ function AppContent({
           'ai-chat': 'chats',
           'send-file': 'files',
           'inbox': 'files',
+          'change-password': 'settings',
         };
         navigate('dashboard', { initialMenu: menuMapping[screen] || 'main' });
       }
@@ -124,7 +150,7 @@ function AppContent({
   const totalUnread = Object.values(global.unreadCounts || {}).reduce((a, b) => a + b, 0);
 
   return (
-    <ThemeProvider theme={draculaTheme}>
+    <ThemeProvider theme={activeTheme}>
       {screen === 'auth'        && <AuthScreen onAuth={setSessionUser} navigate={navigate} />}
       {screen === 'dashboard'   && (
         <DashboardScreen 
@@ -149,6 +175,7 @@ function AppContent({
       {screen === 'group-chat'  && <GroupChatScreen key={params.groupId} user={sessionUser!} groupId={params.groupId} navigate={navigate} onRead={() => {}} />}
       {screen === 'send-file'  && <SendFileScreen user={sessionUser!} navigate={navigate} />}
       {screen === 'inbox'      && <InboxScreen user={sessionUser!} navigate={navigate} />}
+      {screen === 'change-password' && <ChangePasswordScreen user={sessionUser!} navigate={navigate} />}
     </ThemeProvider>
   );
 }
@@ -156,7 +183,7 @@ function AppContent({
 export default function App() {
   const [screen, setScreen] = useState<Screen>('auth');
   const [params, setParams] = useState<Record<string, string>>({});
-  const [sessionUser, setSessionUser] = useState<{ id: string; username: string } | null>(null);
+  const [sessionUser, setSessionUser] = useState<{ id: string; username: string; theme?: string } | null>(null);
 
   const navigate: NavigateFn = (s, p = {}) => {
     setScreen(s);

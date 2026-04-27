@@ -225,11 +225,11 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="#50fa7b" gap={1}>
+        <Box paddingX={1} borderStyle="single" borderColor={theme.colors.secondary} gap={1}>
           <Heading level={1}>{group?.name || '...'}</Heading>
           <Box>
             <Text dimColor>[ </Text>
-            <Text color="#50fa7b">{onlineCount} online</Text>
+            <Text color={theme.colors.secondary}>{onlineCount} online</Text>
             <Text dimColor> ]</Text>
           </Box>
         </Box>
@@ -254,7 +254,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
               // Fallback to theme.primary for null colors (backward compat with existing members)
               const senderColorMap: Record<string, string> = {};
               group?.members?.forEach((m: any) => {
-                senderColorMap[m.user.id] = m.color ?? theme.colors.primary;
+                senderColorMap[m.user.id] = m.color ?? theme.colors.secondary;
               });
 
               let lastDate = '';
@@ -272,7 +272,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                   }
                   allLines.push(
                     <Box key={`date-${msg.id}`} width="100%" justifyContent="center" flexShrink={0}>
-                      <Text color="gray" dimColor>── {dateStr} ──</Text>
+                      <Text color={theme.colors.mutedForeground} dimColor>── {dateStr} ──</Text>
                     </Box>
                   );
                   allLines.push(<Box key={`date-gap-${msg.id}`} height={1} flexShrink={0} />);
@@ -296,7 +296,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
 
                   allLines.push(
                     <Box key={msg.id} width="100%" justifyContent="center" paddingY={0}>
-                      <Text color={isJoin ? '#50fa7b' : isLeave ? 'red' : 'gray'} italic>
+                      <Text color={isJoin ? theme.colors.success : isLeave ? theme.colors.error : theme.colors.mutedForeground} italic>
                         {msg.content}
                       </Text>
                     </Box>
@@ -315,7 +315,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                 
                 // Find member color
                 const member = group?.members?.find((m: any) => m.userId === msg.senderId);
-                const userColor = member?.color || (isMe ? '#50fa7b' : theme.colors.primary);
+                const userColor = member?.color || (isMe ? theme.colors.success : theme.colors.secondary);
 
                 const isAI = msg.model === 'ai-generated';
                 const suffix = (msg.isEdited ? ' (edited)' : '') + (isAI ? ' (ai-generated)' : '');
@@ -328,7 +328,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                   // New sender header
                   allLines.push(
                     <Box key={`${msg.id}-header`} flexDirection="row" flexShrink={0}>
-                      <Text dimColor color="gray">{timePrefix}</Text>
+                      <Text dimColor color={theme.colors.mutedForeground}>{timePrefix}</Text>
                       <Text color={userColor} bold>
                         {isMe ? 'You' : msg.sender.username}
                         {group?.creatorId === msg.senderId && <Text italic dimColor> (admin)</Text>}
@@ -355,7 +355,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                     const isLastLine = idx === contentLines.length - 1;
                     allLines.push(
                       <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
-                        <Text dimColor color="gray">{idx === 0 ? timePrefix : ' '.repeat(indent)}</Text>
+                        <Text dimColor color={theme.colors.mutedForeground}>{idx === 0 ? timePrefix : ' '.repeat(indent)}</Text>
                         <Text>{lineText}</Text>
                         {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
                         {isLastLine && isAI && <Text dimColor italic> (ai-generated)</Text>}
@@ -395,11 +395,11 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
         onChange={setNewMessage}
         onSubmit={handleSend}
         borderStyle="single"
-        borderColor="#50fa7b"
+        borderColor={theme.colors.secondary}
         commands={commands}
         onOverlayActiveChange={setIsOverlayActive}
       />
-      <AppShell.Hints items={['enter: ask', '↑↓: scroll', 'esc: back', '/: options menu']} />
+      <AppShell.Hints items={['enter: ask', '↑↓: scroll', 'esc: back', '/: options']} />
     </AppShell>
   );
 }

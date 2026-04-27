@@ -6,6 +6,7 @@ type GlobalState = {
   groupUnreadCounts: Record<string, number>;
   totalGroupUnread: number;
   fileTransferCount: number;
+  theme?: string;
 };
 
 type PollingContextType = {
@@ -26,6 +27,7 @@ export const PollingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     groupUnreadCounts: {},
     totalGroupUnread: 0,
     fileTransferCount: 0,
+    theme: undefined,
   });
   const [screenData, setScreenData] = useState<any>({});
   const [onImmediatePoll, setOnImmediatePoll] = useState<(() => void) | null>(null);

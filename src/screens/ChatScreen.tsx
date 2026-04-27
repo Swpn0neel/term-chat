@@ -209,8 +209,8 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
   return (
     <AppShell>
       <AppShell.Header>
-        <Box paddingX={1} borderStyle="single" borderColor="#50fa7b" gap={1}>
-          <Text bold color={theme.colors.primary}>› {friend?.username || '...'}</Text>
+        <Box paddingX={1} borderStyle="single" borderColor={theme.colors.secondary} gap={1}>
+          <Text bold color={theme.colors.secondary}>› {friend?.username || '...'}</Text>
           {friend && (
             <Box>
               <Text dimColor>[ </Text>
@@ -221,11 +221,11 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                 
                 return (
                   <Box gap={1}>
-                    <Text color={isTrulyOnline ? '#50fa7b' : 'gray'}>
+                    <Text color={isTrulyOnline ? theme.colors.success : theme.colors.mutedForeground}>
                       {isTrulyOnline ? '● Online' : '○ Offline'}
                     </Text>
                     {!isTrulyOnline && (
-                      <Text dimColor color="gray">
+                      <Text dimColor color={theme.colors.mutedForeground}>
                         (Last seen: {formatLastSeen(friend.lastSeen)})
                       </Text>
                     )}
@@ -270,7 +270,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                   }
                   allLines.push(
                     <Box key={`date-${msg.id}`} width="100%" justifyContent="center" flexShrink={0}>
-                      <Text color="gray" dimColor>── {dateStr} ──</Text>
+                      <Text color={theme.colors.mutedForeground} dimColor>── {dateStr} ──</Text>
                     </Box>
                   );
                   allLines.push(<Box key={`date-gap-${msg.id}`} height={1} flexShrink={0} />);
@@ -291,7 +291,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                 if (msg.type === 'SYSTEM') {
                   allLines.push(
                     <Box key={msg.id} width="100%" justifyContent="center" paddingY={0}>
-                      <Text color="gray" italic>
+                      <Text color={theme.colors.mutedForeground} italic>
                         {msg.content}
                       </Text>
                     </Box>
@@ -310,8 +310,8 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                 
                 // Colors
                 const isMeSender = friendship?.senderId === user.id;
-                const myColor = (isMeSender ? friendship?.senderColor : friendship?.receiverColor) || '#50fa7b';
-                const friendColor = (isMeSender ? friendship?.receiverColor : friendship?.senderColor) || theme.colors.primary;
+                const myColor = (isMeSender ? friendship?.senderColor : friendship?.receiverColor) || theme.colors.success;
+                const friendColor = (isMeSender ? friendship?.receiverColor : friendship?.senderColor) || theme.colors.secondary;
                 const userColor = isMe ? myColor : friendColor;
 
                 const isAI = msg.model === 'ai-generated';
@@ -325,7 +325,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                   // New sender header
                   allLines.push(
                     <Box key={`${msg.id}-header`} flexDirection="row" flexShrink={0}>
-                      <Text dimColor color="gray">{timePrefix}</Text>
+                      <Text dimColor color={theme.colors.mutedForeground}>{timePrefix}</Text>
                       <Text color={userColor} bold>{isMe ? 'You' : msg.sender.username}:</Text>
                     </Box>
                   );
@@ -348,7 +348,7 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
                     const isLastLine = idx === contentLines.length - 1;
                     allLines.push(
                       <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
-                        <Text dimColor color="gray">{idx === 0 ? timePrefix : ' '.repeat(indent)}</Text>
+                        <Text dimColor color={theme.colors.mutedForeground}>{idx === 0 ? timePrefix : ' '.repeat(indent)}</Text>
                         <Text>{lineText}</Text>
                         {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
                         {isLastLine && isAI && <Text dimColor italic> (ai-generated)</Text>}
@@ -390,12 +390,12 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           onChange={() => {}}
           onSubmit={() => {}}
           borderStyle="single"
-          borderColor="gray"
+          borderColor={theme.colors.mutedForeground}
           commands={[]}
         />
       ) : !isFriend ? (
-        <Box padding={1} borderStyle="single" borderColor="red" justifyContent="center">
-          <Text color="red" bold>You cannot message this user because you are not friends.</Text>
+        <Box padding={1} borderStyle="single" borderColor={theme.colors.error} justifyContent="center">
+          <Text color={theme.colors.error} bold>You cannot message this user because you are not friends.</Text>
         </Box>
       ) : (
         <AppShell.Input
@@ -404,12 +404,12 @@ export default function ChatScreen({ user, friendId, navigate, onRead }: any) {
           onChange={setNewMessage}
           onSubmit={handleSend}
           borderStyle="single"
-          borderColor="#50fa7b"
+          borderColor={theme.colors.secondary}
           commands={commands}
           onOverlayActiveChange={setIsOverlayActive}
         />
       )}
-      <AppShell.Hints items={['enter: ask', '↑↓: scroll', 'esc: back', '/: options menu']} />
+      <AppShell.Hints items={['enter: ask', '↑↓: scroll', 'esc: back', '/: options']} />
     </AppShell>
   );
 }

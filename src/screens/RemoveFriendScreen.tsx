@@ -60,8 +60,8 @@ export default function RemoveFriendScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor="red" paddingX={1} marginTop={1}>
-            <Text bold color="red">Remove Friends</Text>
+          <Box borderStyle="single" borderColor={theme.colors.error} paddingX={1} marginTop={1}>
+            <Text bold color={theme.colors.error}>Remove Friends</Text>
           </Box>
         </Box>
       </AppShell.Header>

@@ -121,7 +121,7 @@ function AppShellInput({
       if (key.return || key.tab) {
         const cmd = activeCommands[selectedIndex];
         if (cmd) {
-          const next = (cmd.value || cmd.name.split(' ')[0]) + ' ';
+          const next = (cmd.value || cmd.name) + ' ';
           onChange ? onChange(next) : setInternalValue(next);
           setSelectedIndex(0);
         }
@@ -175,7 +175,7 @@ function AppShellInput({
                   {cmd.name} 
                 </Text>
                 <Text 
-                  color={isSelected ? theme.colors.background : 'gray'} 
+                  color={isSelected ? theme.colors.background : theme.colors.mutedForeground} 
                   backgroundColor={isSelected ? theme.colors.primary : undefined}
                   wrap="truncate-end"
                 >
@@ -239,7 +239,7 @@ function AppShellHints({ items, children }: AppShellHintsProps) {
   }, []);
 
   const versionStr = process.env.APP_VERSION || process.env.npm_package_version;
-  const statusColor = connStatus === 'online' ? "#50fa7b" : connStatus === 'slow' ? "yellow" : "red";
+  const statusColor = connStatus === 'online' ? theme.colors.success : connStatus === 'slow' ? theme.colors.warning : theme.colors.error;
   
   const statusIndicator = (
     <Text>

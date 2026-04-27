@@ -32,6 +32,11 @@ export class AppService {
       where: { receiverId: userId, status: TransferStatus.PENDING }
     });
 
+    const userThemePromise = prisma.user.findUnique({
+      where: { id: userId },
+      select: { theme: true }
+    });
+
     // Sub-query: Groups unread count (needs memberships first)
     const groupsUnreadTask = (async () => {
       const memberships = await prisma.groupMember.findMany({
@@ -152,12 +157,14 @@ export class AppService {
       pendingCount,
       fileTransferCount,
       groupUnreadsRaw,
+      userThemePromiseResult,
       screenResults
     ] = await Promise.all([
       dmUnreadPromise,
       pendingCountPromise,
       fileTransferCountPromise,
       groupsUnreadTask,
+      userThemePromise,
       Promise.all(screenPromises)
     ]);
 
@@ -241,9 +248,23 @@ export class AppService {
         pendingCount,
         groupUnreadCounts,
         totalGroupUnread,
-        fileTransferCount
+        fileTransferCount,
+        theme: (userThemePromiseResult as any)?.theme || 'dracula'
       },
       screenData
     };
+  }
+
+  /**
+   * Update the user's theme preference in the database.
+   */
+  static async updateUserTheme(userId: string, theme: string) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { theme }
+    });
+    // Also save to local session for persistence on startup
+    const { SessionService } = await import('./sessionService');
+    SessionService.saveSession(userId, theme);
   }
 }

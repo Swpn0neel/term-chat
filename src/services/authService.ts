@@ -50,7 +50,7 @@ export class AuthService {
     });
 
     // Save session locally
-    SessionService.saveSession(user.id);
+    SessionService.saveSession(user.id, user.theme || undefined);
     return user;
   }
 
@@ -75,13 +75,13 @@ export class AuthService {
     await prisma.user.update({
       where: { id: user.id },
       data: { 
-        isOnline: true,
+        isOnline: true, 
         lastSeen: new Date()
       }
     });
 
     // Save session locally
-    SessionService.saveSession(user.id);
+    SessionService.saveSession(user.id, user.theme || undefined);
 
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
@@ -100,7 +100,7 @@ export class AuthService {
   }
 
   /**
-   * Update heartbeat timestamp
+   * Update user heartbeat timestamp
    */
   static async updateHeartbeat(userId: string) {
     try {
@@ -112,5 +112,33 @@ export class AuthService {
         }
       });
     } catch (err) {}
+  }
+
+  /**
+   * Change user password
+   */
+  static async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found.');
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      throw new Error('Incorrect current password.');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+      },
+    });
   }
 }

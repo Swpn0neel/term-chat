@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import { Box, Text } from 'ink';
-import { useInput } from '@/lib/theme';
+import { useInput, useTheme } from '@/lib/theme';
 import { AppShell } from '@/components/AppShell';
 import { SessionService } from '@/services/sessionService';
 import { Title } from '@/components/Title';
 import { ClackSelect } from '@/components/Menu';
+import { usePolling } from '@/contexts/PollingContext';
+import { THEMES } from '@/lib/theme';
+import { AppService } from '@/services/appService';
 
-type MenuState = 'main' | 'friends' | 'files' | 'chats';
+type MenuState = 'main' | 'friends' | 'files' | 'chats' | 'settings' | 'themes' | 'change-password';
+const formatThemeName = (name: string) => {
+  return name
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim();
+};
 
 export default function DashboardScreen({ 
   user, 
@@ -19,6 +28,8 @@ export default function DashboardScreen({
   onShutdown
 }: any) {
   const [activeMenu, setActiveMenu] = useState<MenuState>(params.initialMenu || 'main');
+  const { triggerImmediatePoll } = usePolling();
+  const currentTheme = useTheme();
 
   const handleSelect = (val: string) => {
     if (val === 'auth') {
@@ -30,6 +41,18 @@ export default function DashboardScreen({
       setActiveMenu('files');
     } else if (val === 'chats') {
       setActiveMenu('chats');
+    } else if (val === 'settings') {
+      setActiveMenu('settings');
+    } else if (val === 'change-theme') {
+      setActiveMenu('themes');
+    } else if (val === 'change-password') {
+      navigate('change-password');
+    } else if (val.startsWith('set-theme:')) {
+      const themeName = val.split(':')[1];
+      AppService.updateUserTheme(user.id, themeName).then(() => {
+        triggerImmediatePoll();
+      }).catch(() => {});
+      setActiveMenu('settings');
     } else {
       navigate(val);
     }
@@ -39,6 +62,8 @@ export default function DashboardScreen({
     if (key.escape) {
       if (activeMenu === 'main') {
         onShutdown?.();
+      } else if (activeMenu === 'themes') {
+        setActiveMenu('settings');
       } else {
         setActiveMenu('main');
       }
@@ -93,6 +118,31 @@ export default function DashboardScreen({
             { label: 'AI Chat', value: 'ai-chat' }
           ]
         };
+      case 'settings':
+        return {
+          label: 'Application Settings',
+          options: [
+            { label: 'Change App Theme', value: 'change-theme' },
+            { label: 'Change Password', value: 'change-password' },
+          ]
+        };
+      case 'themes':
+        return {
+          label: 'Select a theme',
+          options: [
+            ...Object.entries(THEMES).map(([name, theme]) => ({
+              label: `${formatThemeName(name)}${name === currentTheme.name ? ' ✓' : ''}`,
+              value: `set-theme:${name}`,
+              hint: (
+                <Box>
+                  <Text color={theme.colors.primary}>● </Text>
+                  <Text color={theme.colors.secondary}>● </Text>
+                  <Text color={theme.colors.accent}>● </Text>
+                </Box>
+              )
+            })),
+          ]
+        };
       default:
         return {
           label: 'What would you like to do?',
@@ -112,6 +162,7 @@ export default function DashboardScreen({
               value: 'manage-friends',
               hint: friendNotifications > 0 ? `${friendNotifications} new` : undefined
             },
+            { label: 'Settings', value: 'settings' },
             { label: '', value: 'sep1', isSpacer: true },
             { label: '', value: 'sep2', isSpacer: true },
             { label: 'Sign Out', value: 'auth' }
@@ -127,8 +178,8 @@ export default function DashboardScreen({
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor="#50fa7b" paddingX={1} marginTop={1}>
-            <Text color="#50fa7b">Logged in as: </Text>
+          <Box borderStyle="single" borderColor={currentTheme.colors.primary} paddingX={1} marginTop={1}>
+            <Text color={currentTheme.colors.primary}>Logged in as: </Text>
             <Text bold>{user?.username ?? 'Guest'}</Text>
           </Box>
         </Box>

@@ -6,8 +6,10 @@ import { GroupService } from '@/services/groupService';
 import { Spinner } from '@/components/Spinner';
 import { Title } from '@/components/Title';
 import { ClackMultiSelect } from '@/components/Menu';
+import { useTheme } from '@/lib/theme';
 
 export default function CreateGroupScreen({ user, navigate }: any) {
+  const theme = useTheme();
   const [step, setStep] = useState(1);
   const [groupName, setGroupName] = useState('');
   const [friends, setFriends] = useState<any[]>([]);
@@ -65,7 +67,7 @@ export default function CreateGroupScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor="#50fa7b" paddingX={1} marginTop={1}>
+          <Box borderStyle="single" borderColor={theme.colors.secondary} paddingX={1} marginTop={1}>
             <Text bold>Create New Group</Text>
           </Box>
         </Box>

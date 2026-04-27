@@ -29,10 +29,10 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
   // Auto-login check on mount
   useEffect(() => {
     const checkSession = async () => {
-      const savedUserId = SessionService.getSession();
-      if (savedUserId) {
+      const sessionData = SessionService.getSession();
+      if (sessionData?.userId) {
         try {
-          const user = await AuthService.getUserById(savedUserId);
+          const user = await AuthService.getUserById(sessionData.userId);
           if (user) {
             onAuth(user);
             navigate('dashboard');
@@ -117,7 +117,7 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
           <Box flexDirection="column" padding={1}>
             <Title>TermChat</Title>
             <Box marginTop={1}>
-              <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
+              <Heading level={2} color={theme.colors.mutedForeground}>The Ultimate Terminal Messaging Hub</Heading>
             </Box>
           </Box>
         </AppShell.Header>
@@ -136,7 +136,7 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
           <Box marginTop={1}>
-            <Heading level={2} color='gray'>The Ultimate Terminal Messaging Hub</Heading>
+            <Heading level={2} color={theme.colors.mutedForeground}>The Ultimate Terminal Messaging Hub</Heading>
           </Box>
         </Box>
       </AppShell.Header>
@@ -144,17 +144,17 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
       <AppShell.Content>
         <Box padding={1} flexDirection="column">
           <Box gap={2} marginBottom={1}>
-            <Text color={mode === 'signin' ? "#50fa7b" : undefined} bold={mode === 'signin'}>
+            <Text color={mode === 'signin' ? theme.colors.secondary : undefined} bold={mode === 'signin'}>
               {mode === 'signin' ? '●' : '○'} Sign In
             </Text>
-            <Text color={mode === 'signup' ? "#50fa7b" : undefined} bold={mode === 'signup'}>
+            <Text color={mode === 'signup' ? theme.colors.secondary : undefined} bold={mode === 'signup'}>
               {mode === 'signup' ? '●' : '○'} Sign Up
             </Text>
           </Box>
 
           <Box flexDirection="column" gap={1} width="100%">
             <Box flexDirection="column">
-              <Text color={activeField === 'username' ? theme.colors.primary : undefined}>
+              <Text color={activeField === 'username' ? theme.colors.secondary : undefined}>
                 Username:
               </Text>
               <TextInput 
@@ -169,7 +169,7 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
             </Box>
 
             <Box flexDirection="column">
-              <Text color={activeField === 'password' ? theme.colors.primary : undefined}>
+              <Text color={activeField === 'password' ? theme.colors.secondary : undefined}>
                 Password:
               </Text>
               <TextInput 
@@ -186,7 +186,7 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
 
             {mode === 'signup' && (
               <Box flexDirection="column">
-                <Text color={activeField === 'confirmPassword' ? theme.colors.primary : undefined}>
+                <Text color={activeField === 'confirmPassword' ? theme.colors.secondary : undefined}>
                   Confirm Password:
                 </Text>
                 <TextInput 

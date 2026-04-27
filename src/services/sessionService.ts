@@ -7,9 +7,11 @@ export class SessionService {
   /**
    * Save the current user session to a local file
    */
-  static saveSession(userId: string) {
+  static saveSession(userId: string, themeName?: string) {
     try {
-      fs.writeFileSync(SESSION_FILE, JSON.stringify({ userId }));
+      const data: any = { userId };
+      if (themeName) data.themeName = themeName;
+      fs.writeFileSync(SESSION_FILE, JSON.stringify(data));
     } catch (err) {
       console.error('Failed to save session:', err);
     }
@@ -18,11 +20,11 @@ export class SessionService {
   /**
    * Get the saved user session from the local file
    */
-  static getSession(): string | null {
+  static getSession(): { userId: string; themeName?: string } | null {
     try {
       if (fs.existsSync(SESSION_FILE)) {
         const data = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf-8'));
-        return data.userId || null;
+        return data;
       }
     } catch (err) {
       // If parsing fails, the session is likely corrupt, so just return null

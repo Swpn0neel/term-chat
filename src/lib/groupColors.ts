@@ -7,7 +7,7 @@
 export const GROUP_COLORS = [
   '#BD93F9', // purple
   '#8BE9FD', // cyan
-  '#50FA7B', // #50fa7b
+  '#50FA7B', // green
   '#FFB86C', // orange
   '#FF79C6', // pink
   '#FF5555', // red
@@ -17,6 +17,26 @@ export const GROUP_COLORS = [
   '#C0CAF5', // lavender
   '#B4F9F8', // teal
   '#FFD700', // gold
+  '#FFB7C5', // pastel rose
+  '#89CFF0', // baby blue
+  '#93C572', // pistachio
+  '#F88379', // coral pink
+  '#CCCCFF', // periwinkle
+  '#D8BFD8', // thistle
+  '#B2E2F2', // sky blue
+  '#C1E1C1', // pale green
+  '#FFFACD', // lemon chiffon
+  '#FFCCBB', // pale peach
+  '#9FE2BF', // seafoam
+  '#E0BBE4', // mauve
+  '#BFFCC6', // mint green (soft)
+  '#A0CED9', // pastel blue-green
+  '#FFECB3', // light amber
+  '#D1C4E9', // deep lavender
+  '#F48FB1', // soft pink
+  '#80CBC4', // soft teal
+  '#C5E1A5', // soft lime
+  '#FFE082', // soft amber
 ] as const;
 
 /** Pick a random color from the pool, optionally excluding one color. */
