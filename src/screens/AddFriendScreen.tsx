@@ -7,6 +7,7 @@ import { Alert } from '@/components/Alert';
 import { Spinner } from '@/components/Spinner';
 import { SocialService } from '@/services/socialService';
 import { Title } from '@/components/Title';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export default function AddFriendScreen({ user, navigate }: any) {
   const theme = useTheme();
@@ -44,9 +45,7 @@ export default function AddFriendScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor={theme.colors.secondary} paddingX={1} marginTop={1}>
-            <Text bold>Add Friend</Text>
-          </Box>
+          <Breadcrumbs items={['Main Menu', 'Manage Friends', 'Add Friend']} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>

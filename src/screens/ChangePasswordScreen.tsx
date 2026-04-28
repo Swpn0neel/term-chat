@@ -7,8 +7,8 @@ import { Spinner } from '@/components/Spinner';
 import { AuthService } from '@/services/authService';
 import { SessionService } from '@/services/sessionService';
 import { AppShell } from '@/components/AppShell';
-import { Heading } from '@/components/Heading';
 import { Title } from '@/components/Title';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { Screen } from '@/App';
 
 interface ChangePasswordScreenProps {
@@ -88,16 +88,12 @@ export default function ChangePasswordScreen({ user, navigate }: ChangePasswordS
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor={theme.colors.primary} paddingX={1} marginTop={1}>
-            <Text color={theme.colors.primary}>Logged in as: </Text>
-            <Text bold>{user.username}</Text>
-          </Box>
+          <Breadcrumbs items={['Main Menu', 'Settings', 'Change Password']} />
         </Box>
       </AppShell.Header>
 
       <AppShell.Content>
         <Box padding={1} flexDirection="column">
-          <Heading level={2}>Change Password</Heading>
           
           <Box flexDirection="column" gap={1} width="100%" marginTop={1}>
             <Box flexDirection="column">

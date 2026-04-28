@@ -41,7 +41,10 @@ ai-debug.log
 scratch/
 .planning/
 .claude/
+.agents
 PLAN.md
+.graphifyignore
+graphify-out
 
 # Editor
 .vscode/

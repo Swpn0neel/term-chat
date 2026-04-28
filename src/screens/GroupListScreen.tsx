@@ -5,6 +5,7 @@ import { GroupService } from '@/services/groupService';
 import { Spinner } from '@/components/Spinner';
 import { Heading } from '@/components/Heading';
 import { Title } from '@/components/Title';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ClackSelect, ClackOption } from '@/components/Menu';
 import { usePolling } from '@/contexts/PollingContext';
 import { useTheme } from '@/lib/theme';
@@ -42,9 +43,7 @@ export default function GroupListScreen({ user, navigate, unreadCounts = {} }: a
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor={theme.colors.secondary} paddingX={1} marginTop={1}>
-            <Text bold>Group Chats</Text>
-          </Box>
+          <Breadcrumbs items={['Main Menu', 'Your Chats', 'Group Chats']} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>

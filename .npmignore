@@ -5,6 +5,8 @@
 .gitignore
 .npmignore
 .planning/
+.agents
+graphify-out
 .session.json
 ai-debug.log
 scratch/

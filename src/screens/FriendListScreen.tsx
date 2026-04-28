@@ -8,6 +8,7 @@ import { SocialService } from '@/services/socialService';
 import { Heading } from '@/components/Heading';
 import { usePolling } from '@/contexts/PollingContext';
 import { Title } from '@/components/Title';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { formatLastSeen } from '@/lib/dateUtils';
 import { ClackSelect } from '@/components/Menu';
 
@@ -30,9 +31,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor={theme.colors.secondary} paddingX={1} marginTop={1}>
-            <Text bold>My Friends</Text>
-          </Box>
+          <Breadcrumbs items={['Main Menu', 'Your Chats', "Friend's Chats"]} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>

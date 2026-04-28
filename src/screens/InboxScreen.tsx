@@ -4,6 +4,7 @@ import { AppShell } from '@/components/AppShell';
 import { Title } from '@/components/Title';
 import { Spinner } from '@/components/Spinner';
 import { Alert } from '@/components/Alert';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ClackSelect } from '@/components/Menu';
 import { TextInput } from '@/components/TextInput';
 import { getPendingTransfers, acceptTransfer, declineTransfer } from '@/services/fileTransferService';
@@ -88,9 +89,7 @@ export default function InboxScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor={theme.colors.secondary} paddingX={1} marginTop={1}>
-            <Text bold>File Inbox</Text>
-          </Box>
+          <Breadcrumbs items={['Main Menu', 'File Transfer', 'File Inbox']} />
         </Box>
       </AppShell.Header>
       

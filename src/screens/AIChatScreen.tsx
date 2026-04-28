@@ -29,7 +29,7 @@ export default function AIChatScreen({ user, navigate }: any) {
   const { stdout } = useStdout();
 
   const handleStreamChunk = useCallback((text: string) => {
-    fullResponseRef.current += text;
+    fullResponseRef.current += text.replace(/\n/g, ' ');
   }, []);
 
   const handleStreamDone = useCallback((_fullText: string) => {
@@ -362,7 +362,10 @@ function ChatOutput({ history, streamText, isThinking, theme, width, rows, scrol
       const content = turn.parts[0].text;
       const isSystem = content.startsWith('System: ');
       const isSameSender = !isSystem && turn.role === lastRole;
-      const displayContent = isSystem ? content.substring(8) : content;
+      let displayContent = isSystem ? content.substring(8) : content;
+      if (turn.role === 'model' && !isSystem) {
+        displayContent = displayContent.replace(/\n/g, ' ');
+      }
       const time = turn.createdAt ? new Date(turn.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
       const timePrefix = `[${time}] `;
       const indent = timePrefix.length;

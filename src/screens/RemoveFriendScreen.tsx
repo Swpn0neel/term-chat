@@ -6,6 +6,7 @@ import { Alert } from '@/components/Alert';
 import { Spinner } from '@/components/Spinner';
 import { SocialService } from '@/services/socialService';
 import { Title } from '@/components/Title';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ClackMultiSelect } from '@/components/Menu';
 
 export default function RemoveFriendScreen({ user, navigate }: any) {
@@ -60,9 +61,7 @@ export default function RemoveFriendScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor={theme.colors.error} paddingX={1} marginTop={1}>
-            <Text bold color={theme.colors.error}>Remove Friends</Text>
-          </Box>
+          <Breadcrumbs items={['Main Menu', 'Manage Friends', 'Remove Friend']} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>

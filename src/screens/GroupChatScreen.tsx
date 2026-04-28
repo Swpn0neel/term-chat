@@ -321,7 +321,8 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                 const suffix = (msg.isEdited ? ' (edited)' : '') + (isAI ? ' (ai-generated)' : '');
                 const contentWidth = Math.max(10, width - indent - 6 - suffix.length);
                 
-                const wrappedContent = wrapAnsi(msg.content, contentWidth, { hard: true, trim: false });
+                const displayContent = isAI ? msg.content.replace(/\n/g, ' ') : msg.content;
+                const wrappedContent = wrapAnsi(displayContent, contentWidth, { hard: true, trim: false });
                 const contentLines = wrappedContent.split('\n');
 
                 if (msg.senderId !== lastSenderId) {
@@ -399,7 +400,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
         commands={commands}
         onOverlayActiveChange={setIsOverlayActive}
       />
-      <AppShell.Hints items={['enter: ask', '↑↓: scroll', 'esc: back', '/: options']} />
+      <AppShell.Hints items={['enter: send', '↑↓: scroll', 'esc: back', '/: options']} />
     </AppShell>
   );
 }

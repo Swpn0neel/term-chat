@@ -4,6 +4,7 @@ import { useInput, useTheme } from '@/lib/theme';
 import { AppShell } from '@/components/AppShell';
 import { SessionService } from '@/services/sessionService';
 import { Title } from '@/components/Title';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { ClackSelect } from '@/components/Menu';
 import { usePolling } from '@/contexts/PollingContext';
 import { THEMES } from '@/lib/theme';
@@ -178,10 +179,16 @@ export default function DashboardScreen({
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Box borderStyle="single" borderColor={currentTheme.colors.primary} paddingX={1} marginTop={1}>
-            <Text color={currentTheme.colors.primary}>Logged in as: </Text>
-            <Text bold>{user?.username ?? 'Guest'}</Text>
-          </Box>
+          <Breadcrumbs 
+            items={[
+              'Main Menu',
+              ...(activeMenu === 'friends' ? ['Manage Friends'] : []),
+              ...(activeMenu === 'files' ? ['File Transfer'] : []),
+              ...(activeMenu === 'chats' ? ['Your Chats'] : []),
+              ...(activeMenu === 'settings' ? ['Settings'] : []),
+              ...(activeMenu === 'themes' ? ['Settings', 'Change Theme'] : []),
+            ]} 
+          />
         </Box>
       </AppShell.Header>
       <AppShell.Content>
