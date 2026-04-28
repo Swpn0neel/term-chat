@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { useInput, useFocus, useTheme } from '@/lib/theme';
 
@@ -9,7 +9,7 @@ export interface TextInputProps {
   placeholder?: string;
   mask?: string;
   validate?: (value: string) => string | null;
-  width?: number;
+  width?: number | string;
   label?: string;
   autoFocus?: boolean;
   id?: string;
@@ -39,7 +39,7 @@ export function TextInput({
   placeholder = '',
   mask,
   validate,
-  width = 40,
+  width = '100%',
   label,
   autoFocus = false,
   id,
@@ -50,6 +50,7 @@ export function TextInput({
   cursor = '█',
 }: TextInputProps) {
   const [internalValue, setInternalValue] = useState('');
+  const [cursorPosition, setCursorPosition] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const theme = useTheme();
   const { isFocused: internalIsFocused } = useFocus({ autoFocus, id });
@@ -57,6 +58,18 @@ export function TextInput({
   const isFocused = externalIsFocused ?? internalIsFocused;
 
   const value = controlledValue ?? internalValue;
+
+  // Move cursor to end when focused
+  useEffect(() => {
+    if (isFocused) {
+      setCursorPosition(value.length);
+    }
+  }, [isFocused]);
+
+  // Sync cursor position when value changes externally if it's beyond the new length
+  if (cursorPosition > value.length) {
+    setCursorPosition(value.length);
+  }
 
   useInput((input, key) => {
     if (!isFocused) return;
@@ -72,18 +85,32 @@ export function TextInput({
       return;
     }
 
+    if (key.leftArrow) {
+      setCursorPosition((pos) => Math.max(0, pos - 1));
+      return;
+    }
+
+    if (key.rightArrow) {
+      setCursorPosition((pos) => Math.min(value.length, pos + 1));
+      return;
+    }
+
     // Handle backspace and delete (including common Windows/Linux control characters)
     if (key.backspace || key.delete || input === '\x08' || input === '\x7f') {
-      const newVal = value.slice(0, -1);
-      onChange ? onChange(newVal) : setInternalValue(newVal);
+      if (cursorPosition > 0) {
+        const newVal = value.slice(0, cursorPosition - 1) + value.slice(cursorPosition);
+        onChange ? onChange(newVal) : setInternalValue(newVal);
+        setCursorPosition((pos) => pos - 1);
+      }
       return;
     }
 
     // Ignore other control characters (e.g. arrows, escape) and escape sequences
     if (key.escape || key.upArrow || key.downArrow || key.tab || input.charCodeAt(0) < 32) return;
 
-    const newVal = value + input;
+    const newVal = value.slice(0, cursorPosition) + input + value.slice(cursorPosition);
     onChange ? onChange(newVal) : setInternalValue(newVal);
+    setCursorPosition((pos) => pos + input.length);
   });
 
   const displayValue = mask ? mask.repeat(value.length) : value;
@@ -93,17 +120,23 @@ export function TextInput({
       ? theme.colors.focusRing
       : theme.colors.border;
 
+  const beforeCursor = displayValue.slice(0, cursorPosition);
+  const afterCursor = displayValue.slice(cursorPosition);
+
   const inputContent = (
-    <>
+    <Box>
       <Text color={value ? theme.colors.foreground : theme.colors.mutedForeground}>
-        {displayValue || placeholder}
+        {beforeCursor}
       </Text>
       {isFocused && <Text color={theme.colors.focusRing}>{cursor}</Text>}
-    </>
+      <Text color={value ? theme.colors.foreground : theme.colors.mutedForeground}>
+        {afterCursor || (value === '' ? placeholder : '')}
+      </Text>
+    </Box>
   );
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" width={width} flexGrow={1}>
       {label && <Text bold>{label}</Text>}
       {bordered ? (
         <Box borderStyle={borderStyle} borderColor={borderColor} width={width} paddingX={paddingX}>

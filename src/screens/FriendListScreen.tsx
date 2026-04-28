@@ -31,7 +31,7 @@ export default function FriendListScreen({ user, navigate, unreadCounts = {} }: 
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Breadcrumbs items={['Main Menu', 'Your Chats', "Friend's Chats"]} />
+          <Breadcrumbs items={['Main Menu', 'Your Chats', "Friend's Chats"]} username={user.username} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>

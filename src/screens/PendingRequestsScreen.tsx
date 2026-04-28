@@ -53,7 +53,7 @@ export default function PendingRequestsScreen({ user, navigate, onUpdate }: any)
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Breadcrumbs items={['Main Menu', 'Manage Friends', 'Pending Requests']} />
+          <Breadcrumbs items={['Main Menu', 'Manage Friends', 'Pending Requests']} username={user.username} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>

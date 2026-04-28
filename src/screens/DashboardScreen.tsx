@@ -48,6 +48,8 @@ export default function DashboardScreen({
       setActiveMenu('themes');
     } else if (val === 'change-password') {
       navigate('change-password');
+    } else if (val === 'update-bio') {
+      navigate('update-bio');
     } else if (val.startsWith('set-theme:')) {
       const themeName = val.split(':')[1];
       AppService.updateUserTheme(user.id, themeName).then(() => {
@@ -124,6 +126,7 @@ export default function DashboardScreen({
           label: 'Application Settings',
           options: [
             { label: 'Change App Theme', value: 'change-theme' },
+            { label: 'Update Bio', value: 'update-bio' },
             { label: 'Change Password', value: 'change-password' },
           ]
         };
@@ -188,6 +191,7 @@ export default function DashboardScreen({
               ...(activeMenu === 'settings' ? ['Settings'] : []),
               ...(activeMenu === 'themes' ? ['Settings', 'Change Theme'] : []),
             ]} 
+            username={user.username}
           />
         </Box>
       </AppShell.Header>

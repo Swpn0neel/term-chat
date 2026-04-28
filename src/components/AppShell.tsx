@@ -79,8 +79,16 @@ function AppShellInput({
   onOverlayActiveChange,
 }: AppShellInputProps) {
   const [internalValue, setInternalValue] = useState('');
+  const [cursorPosition, setCursorPosition] = useState(0);
   const theme = useTheme();
   const value = controlledValue ?? internalValue;
+
+  // Sync cursor position when value changes
+  useEffect(() => {
+    if (cursorPosition > value.length) {
+      setCursorPosition(value.length);
+    }
+  }, [value, cursorPosition]);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -92,7 +100,6 @@ function AppShellInput({
 
   const showOverlay = activeCommands.length > 0;
 
-  // Reset selection when the search changes or becomes invalid
   useEffect(() => {
     setSelectedIndex(0);
   }, [activeCommands.length, value.split(' ')[0]]);
@@ -123,6 +130,7 @@ function AppShellInput({
         if (cmd) {
           const next = (cmd.value || cmd.name) + ' ';
           onChange ? onChange(next) : setInternalValue(next);
+          setCursorPosition(next.length);
           setSelectedIndex(0);
         }
         return;
@@ -131,23 +139,38 @@ function AppShellInput({
 
     if (key.return) {
       onSubmit?.(value);
-      if (!controlledValue) setInternalValue('');
+      if (!controlledValue) {
+        setInternalValue('');
+        setCursorPosition(0);
+      }
       setSelectedIndex(0);
       return;
     }
 
-    // Handle backspace and delete (including common Windows/Linux control characters)
-    if (key.backspace || key.delete || input === '\x08' || input === '\x7f') {
-      const next = value.slice(0, -1);
-      onChange ? onChange(next) : setInternalValue(next);
+    if (key.leftArrow) {
+      setCursorPosition(pos => Math.max(0, pos - 1));
       return;
     }
 
-    // Ignore other control characters (e.g. arrows, escape) and escape sequences
+    if (key.rightArrow) {
+      setCursorPosition(pos => Math.min(value.length, pos + 1));
+      return;
+    }
+
+    if (key.backspace || key.delete || input === '\x08' || input === '\x7f') {
+      if (cursorPosition > 0) {
+        const next = value.slice(0, cursorPosition - 1) + value.slice(cursorPosition);
+        onChange ? onChange(next) : setInternalValue(next);
+        setCursorPosition(pos => pos - 1);
+      }
+      return;
+    }
+
     if (key.escape || key.upArrow || key.downArrow || key.tab || input.charCodeAt(0) < 32) return;
 
-    const next = value + input;
+    const next = value.slice(0, cursorPosition) + input + value.slice(cursorPosition);
     onChange ? onChange(next) : setInternalValue(next);
+    setCursorPosition(pos => pos + input.length);
   });
 
   return (
@@ -198,14 +221,18 @@ function AppShellInput({
         borderColor={borderColor ?? theme.colors.border}
         flexDirection="row"
         paddingX={1}
+        flexGrow={1}
       >
         {prefix && (
           <Text color={theme.colors.primary} bold>
             {prefix + ' '}
           </Text>
         )}
-        <Text>{value || <Text dimColor>{placeholder}</Text>}</Text>
-        <Text color={theme.colors.focusRing}>{'█'}</Text>
+        <Box>
+          <Text>{value.slice(0, cursorPosition)}</Text>
+          <Text color={theme.colors.focusRing}>{'█'}</Text>
+          <Text>{value.slice(cursorPosition) || (value === '' ? <Text dimColor>{placeholder}</Text> : '')}</Text>
+        </Box>
       </Box>
     </Box>
   );

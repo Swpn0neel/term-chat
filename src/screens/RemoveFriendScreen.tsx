@@ -61,7 +61,7 @@ export default function RemoveFriendScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Breadcrumbs items={['Main Menu', 'Manage Friends', 'Remove Friend']} />
+          <Breadcrumbs items={['Main Menu', 'Manage Friends', 'Remove Friend']} username={user.username} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>

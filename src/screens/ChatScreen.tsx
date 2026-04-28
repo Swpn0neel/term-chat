@@ -10,6 +10,7 @@ import { AIService } from '@/services/aiService';
 import { prisma } from '@/lib/prisma';
 
 import { Heading } from '@/components/Heading';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { formatLastSeen, formatDateSeparator } from '@/lib/dateUtils';
 import { usePolling } from '@/contexts/PollingContext';
 

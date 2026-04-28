@@ -88,7 +88,7 @@ export default function ChangePasswordScreen({ user, navigate }: ChangePasswordS
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Breadcrumbs items={['Main Menu', 'Settings', 'Change Password']} />
+          <Breadcrumbs items={['Main Menu', 'Settings', 'Change Password']} username={user.username} />
         </Box>
       </AppShell.Header>
 

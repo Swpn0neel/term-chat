@@ -141,4 +141,37 @@ export class AuthService {
       },
     });
   }
+
+  /**
+   * Update user bio details
+   */
+  static async updateBio(userId: string, data: { fullName?: string, about?: string, birthday?: Date | null }) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        fullName: data.fullName,
+        about: data.about,
+        birthday: data.birthday
+      }
+    });
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  /**
+   * Get user by username for bio info
+   */
+  static async getUserByUsername(username: string) {
+    const user = await prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        about: true,
+        birthday: true
+      }
+    });
+    return user;
+  }
 }

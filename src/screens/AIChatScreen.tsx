@@ -7,6 +7,7 @@ import { Spinner } from '@/components/Spinner';
 import { AIService, ChatMessage } from '@/services/aiService';
 import { AVAILABLE_MODELS, ModelId } from '@/lib/models';
 import { Heading } from '@/components/Heading';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { session } from '@/lib/session';
 
 export default function AIChatScreen({ user, navigate }: any) {

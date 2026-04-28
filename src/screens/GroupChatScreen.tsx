@@ -7,8 +7,10 @@ import { Spinner } from '@/components/Spinner';
 import { MessageService } from '@/services/messageService';
 import { GroupService } from '@/services/groupService';
 import { AIService } from '@/services/aiService';
+import { AuthService } from '@/services/authService';
 
 import { Heading } from '@/components/Heading';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { formatDateSeparator } from '@/lib/dateUtils';
 import { usePolling } from '@/contexts/PollingContext';
 
@@ -132,6 +134,31 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
           triggerImmediatePoll();
           return;
         }
+        if (cmd === '/info' && arg) {
+          const targetUser = await AuthService.getUserByUsername(arg);
+          if (!targetUser) throw new Error(`User @${arg} not found.`);
+          
+          const infoLines = [];
+          if (targetUser.fullName) infoLines.push(`Name: ${targetUser.fullName}`);
+          if (targetUser.about) infoLines.push(`About: ${targetUser.about}`);
+          if (targetUser.birthday) {
+            const bday = new Date(targetUser.birthday);
+            const day = String(bday.getDate()).padStart(2, '0');
+            const month = String(bday.getMonth() + 1).padStart(2, '0');
+            const year = bday.getFullYear();
+            infoLines.push(`Birthday: ${day}/${month}/${year}`);
+          }
+
+          if (infoLines.length === 0) {
+            throw new Error(`No info present about @${arg}.`);
+          }
+
+          const infoContent = `User Info for @${arg}:\n${infoLines.join('\n')}`;
+          await MessageService.sendGroupMessage(user.id, groupId, infoContent);
+          setNewMessage('');
+          triggerImmediatePoll();
+          return;
+        }
       } catch (err: any) {
         setLocalMessages(prev => [...prev, {
           id: 'error-' + Date.now(),
@@ -215,6 +242,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
     { name: '/ai [prompt]', description: 'ask ai (requires gemini key)', value: '/ai' },
     { name: '/delete [n|all]', description: 'delete your messages, n = msg no', value: '/delete' },
     { name: '/edit [n] [new message]', description: 'edit your message, n = msg no', value: '/edit' },
+    { name: '/info [username]', description: 'show user bio info', value: '/info' },
     { name: '/leave', description: 'leave group', value: '/leave' }
   ];
   if (group?.creatorId === user.id) {

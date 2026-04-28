@@ -152,8 +152,8 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
             </Text>
           </Box>
 
-          <Box flexDirection="column" gap={1} width="100%">
-            <Box flexDirection="column">
+          <Box flexDirection="column" gap={1} width="100%" flexGrow={1}>
+            <Box flexDirection="column" flexGrow={1}>
               <Text color={activeField === 'username' ? theme.colors.secondary : undefined}>
                 Username:
               </Text>
@@ -168,7 +168,7 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
               />
             </Box>
 
-            <Box flexDirection="column">
+            <Box flexDirection="column" flexGrow={1}>
               <Text color={activeField === 'password' ? theme.colors.secondary : undefined}>
                 Password:
               </Text>
@@ -185,7 +185,7 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
             </Box>
 
             {mode === 'signup' && (
-              <Box flexDirection="column">
+              <Box flexDirection="column" flexGrow={1}>
                 <Text color={activeField === 'confirmPassword' ? theme.colors.secondary : undefined}>
                   Confirm Password:
                 </Text>

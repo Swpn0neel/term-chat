@@ -43,7 +43,7 @@ export default function GroupListScreen({ user, navigate, unreadCounts = {} }: a
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Breadcrumbs items={['Main Menu', 'Your Chats', 'Group Chats']} />
+          <Breadcrumbs items={['Main Menu', 'Your Chats', 'Group Chats']} username={user.username} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>

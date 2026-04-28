@@ -89,7 +89,7 @@ export default function InboxScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Breadcrumbs items={['Main Menu', 'File Transfer', 'File Inbox']} />
+          <Breadcrumbs items={['Main Menu', 'File Transfer', 'File Inbox']} username={user.username} />
         </Box>
       </AppShell.Header>
       
@@ -127,7 +127,7 @@ export default function InboxScreen({ user, navigate }: any) {
 
           {stage === 'DESTINATION' && (
             <Box flexDirection="column">
-              <Text bold>Enter Destination Directory Path:</Text>
+              <Text bold color={theme.colors.secondary}>Enter Destination Directory Path:</Text>
               <Box gap={1}>
                 <TextInput 
                   borderStyle='single'
@@ -151,12 +151,12 @@ export default function InboxScreen({ user, navigate }: any) {
 
           {stage === 'DOWNLOADING' && (
             <Box flexDirection="column" gap={1}>
-              <Text bold>Downloading from Cloud...</Text>
+              <Text bold color={theme.colors.secondary}>Downloading from Cloud...</Text>
               <Box gap={1}>
                 <ProgressBar pct={progress} />
-                <Text> {progress}% <Text dimColor> {speed ? `(↓ ${prettyBytes(speed)}/s)` : ""}</Text></Text>
+                <Text color={theme.colors.primary}> {progress}% <Text dimColor color={theme.colors.mutedForeground}> {speed ? `(↓ ${prettyBytes(speed)}/s)` : ""}</Text></Text>
               </Box>
-              <Text dimColor>{selectedTransfer.fileName}</Text>
+              <Text color={theme.colors.mutedForeground} dimColor>{selectedTransfer.fileName}</Text>
             </Box>
           )}
 
@@ -195,9 +195,9 @@ function ProgressBar({ pct }: { pct: number }) {
   const filled = Math.round((pct / 100) * width);
   const empty = width - filled;
   return (
-    <Text color={theme.colors.info}>
+    <Text color={theme.colors.secondary}>
       {'█'.repeat(filled)}
-      {'░'.repeat(empty)}
+      <Text color={theme.colors.mutedForeground} dimColor>{'░'.repeat(empty)}</Text>
     </Text>
   );
 }

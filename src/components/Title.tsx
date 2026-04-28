@@ -70,8 +70,11 @@ export function Title({ children, color }: TitleProps) {
     return acc + (charRows[0]?.length ?? 0);
   }, 0);
 
-  // If terminal is too narrow, use simple text with a border
-  if (stdout?.columns && stdout.columns < totalWidth + 10) {
+  // If terminal is too narrow OR too short, use simple text with a border
+  const tooNarrow = stdout?.columns && stdout.columns < totalWidth + 10;
+  const tooShort = stdout?.rows && stdout.rows < 25;
+
+  if (tooNarrow || tooShort) {
     return (
       <Box borderStyle="double" borderColor={resolvedColor} paddingX={2} paddingY={0}>
         <Text color={resolvedColor} bold>

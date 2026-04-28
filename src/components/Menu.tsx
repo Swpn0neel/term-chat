@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Text } from 'ink';
+import { Box, Text, useStdout } from 'ink';
 import { useInput, useTheme } from '@/lib/theme';
 
 export interface ClackOption {
@@ -21,6 +21,7 @@ export interface ClackSelectProps {
 export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
   const [activeIndex, setActiveIndex] = useState(options.findIndex(o => !o.isSpacer) || 0);
   const theme = useTheme();
+  const { stdout } = useStdout();
 
   useInput((input, key) => {
     if (key.upArrow) {
@@ -52,7 +53,11 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
     }
   });
 
-  const VISIBLE_COUNT = 8;
+  const rows = stdout?.rows || 24;
+  const width = stdout?.columns || 80;
+  // Calculate dynamic visible count based on window height
+  // Reserves space for header, breadcrumbs, hints, etc.
+  const VISIBLE_COUNT = Math.max(4, rows - 15);
   const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {
@@ -65,7 +70,7 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
     } else if (activeIndex >= startIndex + VISIBLE_COUNT) {
       setStartIndex(activeIndex - VISIBLE_COUNT + 1);
     }
-  }, [activeIndex, startIndex, options.length]);
+  }, [activeIndex, startIndex, options.length, VISIBLE_COUNT]);
 
   const visibleOptions = options.slice(startIndex, startIndex + VISIBLE_COUNT);
 
@@ -74,7 +79,7 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
       {/* Question / Label */}
       <Box gap={1}>
         <Text color={theme.colors.primary} bold>◆ </Text>
-        <Text bold>{label}</Text>
+        <Text bold wrap="truncate-end">{label}</Text>
       </Box>
       
       {/* Spacer vertical line */}
@@ -105,7 +110,7 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
                 {option.label}
               </Text>
             </Box>
-            {option.hint && (
+            {option.hint && width > 50 && (
               <Box flexShrink={0} marginLeft={2}>
                 {typeof option.hint === 'string' || typeof option.hint === 'number' ? (
                   <Text color={theme.colors.mutedForeground} dimColor>
@@ -147,6 +152,8 @@ export interface ClackMultiSelectProps {
 export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: ClackMultiSelectProps) => {
   const [activeIndex, setActiveIndex] = useState(options.findIndex(o => !o.isSpacer) || 0);
   const theme = useTheme();
+  const { stdout } = useStdout();
+  const width = stdout?.columns || 80;
 
   useInput((input, key) => {
     if (key.upArrow) {
@@ -183,7 +190,8 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
     }
   });
 
-  const VISIBLE_COUNT = 8;
+  const rows = stdout?.rows || 24;
+  const VISIBLE_COUNT = Math.max(3, rows - 12);
   const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {
@@ -196,7 +204,7 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
     } else if (activeIndex >= startIndex + VISIBLE_COUNT) {
       setStartIndex(activeIndex - VISIBLE_COUNT + 1);
     }
-  }, [activeIndex, startIndex, options.length]);
+  }, [activeIndex, startIndex, options.length, VISIBLE_COUNT]);
 
   const visibleOptions = options.slice(startIndex, startIndex + VISIBLE_COUNT);
 
@@ -205,7 +213,7 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
       {/* Question / Label */}
       <Box gap={1}>
         <Text color={theme.colors.primary} bold>◆ </Text>
-        <Text bold>{label}</Text>
+        <Text bold wrap="truncate-end">{label}</Text>
       </Box>
       
       {/* Spacer vertical line */}
@@ -240,7 +248,7 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
                 {option.label}
               </Text>
             </Box>
-            {option.hint && (
+            {option.hint && width > 50 && (
               <Box flexShrink={0} marginLeft={2}>
                 {typeof option.hint === 'string' || typeof option.hint === 'number' ? (
                   <Text color={theme.colors.mutedForeground} dimColor>

@@ -14,6 +14,7 @@ import RemoveFriendScreen from '@/screens/RemoveFriendScreen';
 import SendFileScreen from '@/screens/SendFileScreen';
 import InboxScreen from '@/screens/InboxScreen';
 import ChangePasswordScreen from '@/screens/ChangePasswordScreen';
+import UpdateBioScreen from '@/screens/UpdateBioScreen';
 import { session } from '@/lib/session';
 import { SessionService } from '@/services/sessionService';
 import { AppService } from '@/services/appService';
@@ -25,7 +26,7 @@ export type Screen =
   | 'auth' | 'dashboard' | 'add-friend'
   | 'pending' | 'friend-list' | 'chat' | 'ai-chat' | 'remove-friend'
   | 'group-list' | 'create-group' | 'group-chat'
-  | 'send-file' | 'inbox' | 'change-password';
+  | 'send-file' | 'inbox' | 'change-password' | 'update-bio';
 
 export type NavigateFn = (screen: Screen, params?: Record<string, string>) => void;
 
@@ -141,6 +142,7 @@ function AppContent({
           'send-file': 'files',
           'inbox': 'files',
           'change-password': 'settings',
+          'update-bio': 'settings',
         };
         navigate('dashboard', { initialMenu: menuMapping[screen] || 'main' });
       }
@@ -176,6 +178,7 @@ function AppContent({
       {screen === 'send-file'  && <SendFileScreen user={sessionUser!} navigate={navigate} />}
       {screen === 'inbox'      && <InboxScreen user={sessionUser!} navigate={navigate} />}
       {screen === 'change-password' && <ChangePasswordScreen user={sessionUser!} navigate={navigate} />}
+      {screen === 'update-bio' && <UpdateBioScreen user={sessionUser!} navigate={navigate} onUpdateUser={setSessionUser} />}
     </ThemeProvider>
   );
 }

@@ -68,7 +68,7 @@ export default function CreateGroupScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Breadcrumbs items={['Main Menu', 'Your Chats', 'Group Chats', 'Create Group']} />
+          <Breadcrumbs items={['Main Menu', 'Your Chats', 'Group Chats', 'Create Group']} username={user.username} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>

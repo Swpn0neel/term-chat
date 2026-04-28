@@ -45,7 +45,7 @@ export default function AddFriendScreen({ user, navigate }: any) {
       <AppShell.Header>
         <Box flexDirection="column" padding={1}>
           <Title>TermChat</Title>
-          <Breadcrumbs items={['Main Menu', 'Manage Friends', 'Add Friend']} />
+          <Breadcrumbs items={['Main Menu', 'Manage Friends', 'Add Friend']} username={user.username} />
         </Box>
       </AppShell.Header>
       <AppShell.Content>
