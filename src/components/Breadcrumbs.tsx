@@ -27,7 +27,7 @@ export function Breadcrumbs({ items, username }: BreadcrumbsProps) {
             )}
             <Text 
               bold={index === displayItems.length - 1} 
-              color={index === displayItems.length - 1 ? theme.colors.primary : theme.colors.foreground}
+              color={index === displayItems.length - 1 ? theme.colors.primary : theme.colors.mutedForeground}
             >
               {item}
             </Text>

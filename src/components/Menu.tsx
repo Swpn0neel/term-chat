@@ -27,22 +27,20 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
     if (key.upArrow) {
       setActiveIndex((prev) => {
         if (options.length === 0) return 0;
-        let next = prev > 0 ? prev - 1 : options.length - 1;
-        // Skip spacers
+        let next = prev > 0 ? prev - 1 : options.length - 1; // wrap to end
         while (options[next]?.isSpacer) {
           next = next > 0 ? next - 1 : options.length - 1;
-          if (next === prev) break; // Avoid infinite loop
+          if (next === prev) break;
         }
         return next;
       });
     } else if (key.downArrow) {
       setActiveIndex((prev) => {
         if (options.length === 0) return 0;
-        let next = prev < options.length - 1 ? prev + 1 : 0;
-        // Skip spacers
+        let next = prev < options.length - 1 ? prev + 1 : 0; // wrap to start
         while (options[next]?.isSpacer) {
           next = next < options.length - 1 ? next + 1 : 0;
-          if (next === prev) break; // Avoid infinite loop
+          if (next === prev) break;
         }
         return next;
       });
@@ -55,9 +53,9 @@ export const ClackSelect = ({ label, options, onSubmit }: ClackSelectProps) => {
 
   const rows = stdout?.rows || 24;
   const width = stdout?.columns || 80;
-  // Calculate dynamic visible count based on window height
-  // Reserves space for header, breadcrumbs, hints, etc.
-  const VISIBLE_COUNT = Math.max(4, rows - 15);
+  // Each item + separator = 2 lines. Cap at 7 to guarantee scrolling
+  // activates on any terminal size, regardless of how tall the window is.
+  const VISIBLE_COUNT = Math.min(7, Math.max(3, Math.floor((rows - 16) / 2)));
   const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {
@@ -159,7 +157,7 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
     if (key.upArrow) {
       setActiveIndex((prev) => {
         if (options.length === 0) return 0;
-        let next = prev > 0 ? prev - 1 : options.length - 1;
+        let next = prev > 0 ? prev - 1 : options.length - 1; // wrap to end
         while (options[next]?.isSpacer) {
           next = next > 0 ? next - 1 : options.length - 1;
           if (next === prev) break;
@@ -169,7 +167,7 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
     } else if (key.downArrow) {
       setActiveIndex((prev) => {
         if (options.length === 0) return 0;
-        let next = prev < options.length - 1 ? prev + 1 : 0;
+        let next = prev < options.length - 1 ? prev + 1 : 0; // wrap to start
         while (options[next]?.isSpacer) {
           next = next < options.length - 1 ? next + 1 : 0;
           if (next === prev) break;
@@ -191,7 +189,8 @@ export const ClackMultiSelect = ({ label, options, value, onChange, onSubmit }: 
   });
 
   const rows = stdout?.rows || 24;
-  const VISIBLE_COUNT = Math.max(3, rows - 12);
+  // Cap at 6 items to guarantee scrolling activates on any terminal size.
+  const VISIBLE_COUNT = Math.min(6, Math.max(3, Math.floor((rows - 14) / 2)));
   const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {
