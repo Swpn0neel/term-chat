@@ -26,9 +26,9 @@ export const Route = createFileRoute("/")({
 
 const stats = [
   { k: "<40ms", v: "msg latency" },
-  { k: "100%", v: "privacy" },
+  { k: "E2EE", v: "standard" },
   { k: "R2", v: "cloud storage" },
-  { k: "bcrypt", v: "secured" },
+  { k: "VAULT", v: "key backup" },
 ];
 
 function Index() {
@@ -232,12 +232,12 @@ function Code({
 }
 
 const features = [
+  { title: "End-to-End Encryption", body: "X25519 & XSalsa20 security by default" },
   { title: "Real-time messaging", body: "heartbeat presence, live unread counters" },
-  { title: "Secure auth", body: "bcrypt + persistent sessions" },
-  { title: "Group messaging", body: "admin/member roles, friend invites" },
-  { title: "AI chat (Gemini)", body: "persistent history, /clear to reset" },
-  { title: "File & folder transfer", body: "auto-zip + Cloudflare R2" },
-  { title: "Virtual ANSI engine", body: "wrap-ansi, distortion-free output" },
+  { title: "AI chat (Gemini)", body: "real-time token streaming, persistent history" },
+  { title: "Command Palette (/)", body: "quick access to AI, settings, and message tools" },
+  { title: "Secure Key Vault", body: "zero-knowledge encrypted backup & recovery" },
+  { title: "File & folder transfer", body: "auto-zip + Cloudflare R2 storage" },
 ];
 
 

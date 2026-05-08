@@ -23,22 +23,33 @@ export const Route = createFileRoute("/features")({
 
 const sections = [
   {
-    tag: "AUTH",
-    title: "Secure Authentication",
+    tag: "SEC",
+    title: "End-to-End Encryption",
     points: [
-      "Account registration & login from the CLI",
-      "bcrypt password hashing — no plaintext, ever",
-      "Persistent sessions, auto re-authentication",
+      "Zero-knowledge privacy: only you and the recipient can read messages",
+      "Industry-standard X25519 and XSalsa20 primitives",
+      "Perfect Forward Secrecy (PFS) via per-message nonces",
+      "Cryptographic identity verification for every friend",
+    ],
+  },
+  {
+    tag: "AUTH",
+    title: "Secure Authentication & Vault",
+    points: [
+      "bcrypt password hashing — no plaintext stored",
+      "Encrypted Key Vault (AES-256-GCM) for private key backup",
+      "Seamless multi-device recovery using your password",
+      "Persistent session management in local secure storage",
     ],
   },
   {
     tag: "MSG",
     title: "Real-time Messaging",
     points: [
-      "Instant delivery for DMs and groups",
-      "Heartbeat presence: online / offline indicators",
-      "Live unread counters across every conversation",
-      "Virtual rendering with wrap-ansi — zero distortion",
+      "Command Palette (/) for rapid access to power tools",
+      "Full message lifecycle: edit and delete with sync",
+      "Heartbeat presence: real-time online/offline status",
+      "Virtual rendering with wrap-ansi — zero CLI distortion",
     ],
   },
   {
@@ -46,28 +57,19 @@ const sections = [
     title: "Social Management",
     points: [
       "Global user search & friend requests",
-      "Pending requests dashboard",
-      "Activity-sorted friend list with status & unreads",
-      "One-key friend removal",
-    ],
-  },
-  {
-    tag: "GRP",
-    title: "Group Messaging",
-    points: [
-      "Two-step group creation: name → members",
-      "Admin / Member roles with permissions",
-      "Real-time group chat with unread indicators",
+      "Pending requests dashboard with real-time badges",
+      "Activity-sorted list with status & unread counts",
+      "One-key friend removal and blocking",
     ],
   },
   {
     tag: "AI",
     title: "AI Integration",
     points: [
-      "Built-in chat screen powered by Google Gemini",
-      "Persistent AI conversation history",
+      "Real-time token streaming powered by Google Gemini",
+      "Persistent AI conversation history per user",
+      "Ask AI directly from chat via /ai command",
       "/clear command to reset context instantly",
-      "Harmonized UI — feels like the rest of the app",
     ],
   },
   {
@@ -78,7 +80,7 @@ const sections = [
       "Cloudflare R2 cloud storage backend",
       "Auto-zip folders before upload",
       "Persistent pending state until accept/decline",
-      "Real-time inbox notifications",
+      "Real-time inbox notifications in the Dashboard",
     ],
   },
 ];
