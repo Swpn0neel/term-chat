@@ -37,6 +37,7 @@ lerna-debug.log*
 ai-debug.log
 
 # App Specific
+.sessions/
 .session.json
 scratch/
 .planning/

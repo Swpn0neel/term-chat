@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma';
+import { CryptoService } from '@/lib/crypto';
+import { SessionService } from '@/services/sessionService';
 
 export class MessageService {
   /**
@@ -9,11 +11,32 @@ export class MessageService {
       throw new Error('Message content cannot be empty.');
     }
 
+    const recipient = await prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { publicKey: true }
+    });
+
+    const session = SessionService.getSessionByUserId(senderId);
+    const privateKey = session?.privateKey;
+
+    let finalContent = content.trim();
+    let nonce: string | undefined;
+    let isEncrypted = false;
+
+    if (recipient?.publicKey && privateKey) {
+      const encrypted = CryptoService.encrypt(finalContent, recipient.publicKey, privateKey);
+      finalContent = encrypted.ciphertext;
+      nonce = encrypted.nonce;
+      isEncrypted = true;
+    }
+
     return await prisma.message.create({
       data: {
         senderId,
         receiverId,
-        content: content.trim(),
+        content: finalContent,
+        isEncrypted,
+        nonce,
         model: isAIGenerated ? 'ai-generated' : undefined,
       },
     });
@@ -23,7 +46,7 @@ export class MessageService {
    * Fetch conversation history between two users
    */
   static async getConversation(userId: string, friendId: string) {
-    return await prisma.message.findMany({
+    const messages = await prisma.message.findMany({
       where: {
         OR: [
           { senderId: userId, receiverId: friendId },
@@ -35,9 +58,38 @@ export class MessageService {
       },
       include: {
         sender: {
-          select: { username: true },
+          select: { username: true, publicKey: true },
         },
+        receiver: {
+          select: { publicKey: true }
+        }
       },
+    });
+
+    const session = SessionService.getSessionByUserId(userId);
+    const privateKey = session?.privateKey;
+
+    if (!privateKey) return messages;
+
+    return messages.map(msg => {
+      if (msg.isEncrypted && msg.nonce) {
+        try {
+          // Identify the peer's public key
+          const peer = msg.senderId === userId ? msg.receiver : msg.sender;
+          if (!peer?.publicKey) return msg;
+
+          return {
+            ...msg,
+            content: CryptoService.decrypt(msg.content, msg.nonce, peer.publicKey, privateKey)
+          };
+        } catch (err: any) {
+          return {
+            ...msg,
+            content: `[Decryption Failed: ${err.message}]`
+          };
+        }
+      }
+      return msg;
     });
   }
 
@@ -130,20 +182,46 @@ export class MessageService {
     });
   }
   /**
-   * Edit a message by its ID, ensuring the sender is the one editing it
+   * Edit a message by its ID, ensuring the sender is the one editing it.
+   * Re-encrypts the new content if the message was originally encrypted.
    */
   static async editMessage(messageId: string, senderId: string, content: string) {
     if (!content.trim()) {
       throw new Error('Message content cannot be empty.');
     }
 
+    // Fetch the original message to check if it was encrypted
+    const original = await prisma.message.findFirst({
+      where: { id: messageId, senderId },
+      include: {
+        receiver: { select: { publicKey: true } }
+      }
+    });
+
+    if (!original) {
+      throw new Error('Message not found or you do not have permission to edit it.');
+    }
+
+    let finalContent = content.trim();
+    let newNonce: string | undefined = undefined;
+
+    if (original.isEncrypted && original.receiverId) {
+      const session = SessionService.getSessionByUserId(senderId);
+      const privateKey = session?.privateKey;
+      const recipientPublicKey = original.receiver?.publicKey;
+
+      if (privateKey && recipientPublicKey) {
+        const encrypted = CryptoService.encrypt(finalContent, recipientPublicKey, privateKey);
+        finalContent = encrypted.ciphertext;
+        newNonce = encrypted.nonce;
+      }
+    }
+
     return await prisma.message.updateMany({
-      where: {
-        id: messageId,
-        senderId,
-      },
+      where: { id: messageId, senderId },
       data: {
-        content: content.trim(),
+        content: finalContent,
+        ...(newNonce ? { nonce: newNonce } : {}),
         isEdited: true,
       },
     });

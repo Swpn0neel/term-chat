@@ -24,7 +24,14 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
   
   const [newMessage, setNewMessage] = useState('');
   const [localMessages, setLocalMessages] = useState<any[]>([]);
-  const allMessages = [...messages, ...localMessages];
+  
+  // De-duplicate: only show local messages that haven't appeared in the official list yet
+  const allMessages = [
+    ...messages,
+    ...localMessages.filter(local => 
+      !messages.some((m: any) => m.senderId === local.senderId && m.content === local.content)
+    )
+  ];
   const [isSending, setIsSending] = useState(false);
   const [scrollOffset, setScrollOffset] = useState(0);
 
@@ -44,7 +51,14 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
       GroupService.markAsRead(groupId, user.id).catch(() => {});
       if (onRead) onRead();
     }
-  }, [messages.length, groupId, user.id]);
+
+    // Clean up local messages that have been confirmed by the server
+    if (localMessages.length > 0) {
+      setLocalMessages(prev => prev.filter(local => 
+        local.isError || !messages.some((m: any) => m.senderId === local.senderId && m.content === local.content)
+      ));
+    }
+  }, [messages.length, messages, localMessages.length, groupId, user.id]);
 
   const onlineCount = group ? group.members.filter((m: any) => {
     const lastSeenDate = new Date(m.user.lastSeen);
@@ -210,18 +224,33 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
       return;
     }
 
-    setIsSending(true);
+    // Standard group message send with Optimistic UI
+    const tempId = 'optimistic-' + Date.now();
+    const optimisticMsg = {
+      id: tempId,
+      senderId: user.id,
+      groupId,
+      content: userMessage,
+      createdAt: new Date(),
+      sender: { username: user.username },
+      isSending: true
+    };
+
+    setLocalMessages((prev: any) => [...prev, optimisticMsg]);
     setNewMessage('');
     setScrollOffset(0);
 
-    try {
-      await MessageService.sendGroupMessage(user.id, groupId, userMessage);
-      triggerImmediatePoll();
-    } catch (err) {
-      setNewMessage(userMessage);
-    } finally {
-      setIsSending(false);
-    }
+    // Send in background
+    MessageService.sendGroupMessage(user.id, groupId, userMessage)
+      .then(() => {
+        // We don't remove it here anymore, the useEffect handles it when it appears in messages
+        triggerImmediatePoll();
+      })
+      .catch(() => {
+        setLocalMessages((prev: any) => prev.map((m: any) => 
+          m.id === tempId ? { ...m, isSending: false, isError: true, content: `${m.content} (Failed to send)` } : m
+        ));
+      });
   };
 
   const [isOverlayActive, setIsOverlayActive] = useState(false);
@@ -353,6 +382,8 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                 const wrappedContent = wrapAnsi(displayContent, contentWidth, { hard: true, trim: false });
                 const contentLines = wrappedContent.split('\n');
 
+                const messageStyle = msg.isError ? { color: theme.colors.error } : {};
+
                 if (msg.senderId !== lastSenderId) {
                   // New sender header
                   allLines.push(
@@ -372,7 +403,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                     allLines.push(
                       <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
                         <Text>{' '.repeat(indent)}</Text>
-                        <Text>{lineText}</Text>
+                        <Text {...messageStyle}>{lineText}</Text>
                         {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
                         {isLastLine && isAI && <Text dimColor italic> (ai-generated)</Text>}
                       </Box>
@@ -385,7 +416,7 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                     allLines.push(
                       <Box key={`${msg.id}-l${idx}`} flexDirection="row" flexShrink={0}>
                         <Text dimColor color={theme.colors.mutedForeground}>{idx === 0 ? timePrefix : ' '.repeat(indent)}</Text>
-                        <Text>{lineText}</Text>
+                        <Text {...messageStyle}>{lineText}</Text>
                         {isLastLine && msg.isEdited && <Text dimColor italic> (edited)</Text>}
                         {isLastLine && isAI && <Text dimColor italic> (ai-generated)</Text>}
                       </Box>
@@ -396,14 +427,6 @@ export default function GroupChatScreen({ user, groupId, navigate, onRead }: any
                 lastSenderId = msg.senderId;
               });
 
-              if (isSending) {
-                allLines.push(
-                  <Box key="sending" marginTop={0}>
-                    <Text dimColor italic>Sending...</Text>
-                  </Box>
-                );
-                allLines.push(<Box key="sending-gap" height={1} />);
-              }
 
               const maxLines = Math.max(1, chatHeight);
               const totalLines = allLines.length;

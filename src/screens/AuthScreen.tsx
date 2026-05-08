@@ -30,7 +30,7 @@ export default function AuthScreen({ onAuth, navigate }: AuthScreenProps) {
   useEffect(() => {
     const checkSession = async () => {
       const sessionData = SessionService.getSession();
-      if (sessionData?.userId) {
+      if (sessionData?.userId && sessionData?.loggedIn) {
         try {
           const user = await AuthService.getUserById(sessionData.userId);
           if (user) {

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { SessionService } from '@/services/sessionService';
+import { CryptoService } from '@/lib/crypto';
 
 export class AuthService {
   /**
@@ -12,13 +13,9 @@ export class AuthService {
     });
     if (!user) return null;
     
-    // Explicitly ensure user is marked online if we are restoring their session
     await prisma.user.update({
       where: { id },
-      data: { 
-        isOnline: true,
-        lastSeen: new Date()
-      }
+      data: { isOnline: true, lastSeen: new Date() }
     });
 
     const { password: _, ...userWithoutPassword } = user;
@@ -26,13 +23,10 @@ export class AuthService {
   }
 
   /**
-   * Create a new user with a hashed password
+   * Create a new user, generate E2EE keys, and create an encrypted vault.
    */
   static async signUp(username: string, password: string) {
-    const existing = await prisma.user.findUnique({
-      where: { username },
-    });
-
+    const existing = await prisma.user.findUnique({ where: { username } });
     if (existing) {
       throw new Error('Username is already taken.');
     }
@@ -49,18 +43,33 @@ export class AuthService {
       },
     });
 
-    // Save session locally
-    SessionService.saveSession(user.id, user.theme || undefined);
-    return user;
+    // Generate E2EE keypair
+    const { publicKey, privateKey } = CryptoService.generateKeyPair();
+
+    // Encrypt the private key into an encrypted vault using the user's password
+    const { encryptedVault, vaultSalt } = CryptoService.encryptVault(privateKey, password);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { publicKey, encryptedVault, vaultSalt }
+    });
+
+    // Cache locally for instant access
+    SessionService.saveSession(user.id, user.theme || undefined, privateKey);
+
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   /**
-   * Authenticate a user and return the user object (without password)
+   * Authenticate a user.
+   * Key resolution priority:
+   *   1. Local session file (fast path — same machine, same keypair)
+   *   2. Encrypted vault from DB (new device — decrypt with password)
+   *   3. Generate fresh keypair (brand new account, no vault yet)
    */
   static async signIn(username: string, password: string) {
-    const user = await prisma.user.findUnique({
-      where: { username },
-    });
+    const user = await prisma.user.findUnique({ where: { username } });
 
     if (!user) {
       throw new Error('User not found.');
@@ -71,17 +80,53 @@ export class AuthService {
       throw new Error('Invalid credentials.');
     }
 
-    // Update online status in DB
     await prisma.user.update({
       where: { id: user.id },
-      data: { 
-        isOnline: true, 
-        lastSeen: new Date()
-      }
+      data: { isOnline: true, lastSeen: new Date() }
     });
 
-    // Save session locally
-    SessionService.saveSession(user.id, user.theme || undefined);
+    let resolvedPrivateKey: string | null = null;
+
+    // ── 1. Try local session first (same device, fast path) ──────────────────
+    const localSession = SessionService.getSessionByUserId(user.id);
+    const localPrivateKey = localSession?.privateKey;
+
+    if (localPrivateKey && user.publicKey) {
+      try {
+        const { publicKey: derivedPub } = CryptoService.getPublicKey(localPrivateKey);
+        if (derivedPub === user.publicKey) {
+          resolvedPrivateKey = localPrivateKey;
+        }
+      } catch {}
+    }
+
+    // ── 2. Try vault from DB (new device or local cache miss) ─────────────────
+    if (!resolvedPrivateKey && user.encryptedVault && user.vaultSalt) {
+      try {
+        const privateKey = CryptoService.decryptVault(user.encryptedVault, user.vaultSalt, password);
+        // Verify the decrypted key matches the public key on record
+        const { publicKey: derivedPub } = CryptoService.getPublicKey(privateKey);
+        if (derivedPub === user.publicKey) {
+          resolvedPrivateKey = privateKey;
+        }
+      } catch {
+        // Vault decryption failed (shouldn't happen with correct password)
+      }
+    }
+
+    // ── 3. No usable key found — generate fresh keypair + new vault ───────────
+    if (!resolvedPrivateKey) {
+      const { publicKey, privateKey } = CryptoService.generateKeyPair();
+      const { encryptedVault, vaultSalt } = CryptoService.encryptVault(privateKey, password);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { publicKey, encryptedVault, vaultSalt }
+      });
+      resolvedPrivateKey = privateKey;
+    }
+
+    // Cache resolved key locally for subsequent fast-path access
+    SessionService.saveSession(user.id, user.theme || undefined, resolvedPrivateKey);
 
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
@@ -106,38 +151,40 @@ export class AuthService {
     try {
       await prisma.user.update({
         where: { id: userId },
-        data: { 
-          isOnline: true, // Ensure they are online
-          lastSeen: new Date() 
-        }
+        data: { isOnline: true, lastSeen: new Date() }
       });
     } catch (err) {}
   }
 
   /**
-   * Change user password
+   * Change user password.
+   * Also re-encrypts the vault with the new password so cross-device recovery
+   * continues to work correctly after a password change.
    */
   static async changePassword(userId: string, currentPassword: string, newPassword: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new Error('User not found.');
-    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found.');
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      throw new Error('Incorrect current password.');
-    }
+    if (!isMatch) throw new Error('Incorrect current password.');
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Re-encrypt vault with the new password
+    const localSession = SessionService.getSessionByUserId(userId);
+    const privateKey = localSession?.privateKey;
+    let vaultUpdate: { encryptedVault: string; vaultSalt: string } | undefined;
+
+    if (privateKey) {
+      vaultUpdate = CryptoService.encryptVault(privateKey, newPassword);
+    }
 
     await prisma.user.update({
       where: { id: userId },
       data: {
         password: hashedPassword,
+        ...(vaultUpdate ?? {})
       },
     });
   }

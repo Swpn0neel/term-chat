@@ -34,7 +34,7 @@ export default function DashboardScreen({
 
   const handleSelect = (val: string) => {
     if (val === 'auth') {
-      SessionService.clearSession();
+      SessionService.clearSession(user.id);
       navigate('auth');
     } else if (val === 'manage-friends') {
       setActiveMenu('friends');

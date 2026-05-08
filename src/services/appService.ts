@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Status, TransferStatus } from '@/generated/client';
+import { MessageService } from './messageService';
 
 export class AppService {
   /**
@@ -68,7 +69,7 @@ export class AppService {
       screenPromises = [
         prisma.user.findUnique({
           where: { id: friendId },
-          select: { username: true, isOnline: true, lastSeen: true }
+          select: { username: true, isOnline: true, lastSeen: true, publicKey: true }
         }),
         prisma.friendRequest.findFirst({
           where: {
@@ -78,17 +79,7 @@ export class AppService {
             ]
           }
         }),
-        prisma.message.findMany({
-          where: {
-            OR: [
-              { senderId: userId, receiverId: friendId },
-              { senderId: friendId, receiverId: userId }
-            ]
-          },
-          orderBy: { createdAt: 'desc' }, // Fetch latest
-          take: 100, // Limit for performance
-          include: { sender: { select: { username: true } } }
-        })
+        MessageService.getConversation(userId, friendId)
       ];
     } else if (screen === 'group-chat' && params.groupId) {
       const groupId = params.groupId;
@@ -102,12 +93,7 @@ export class AppService {
             creator: { select: { id: true, username: true } }
           }
         }),
-        prisma.message.findMany({
-          where: { groupId },
-          orderBy: { createdAt: 'desc' },
-          take: 100,
-          include: { sender: { select: { username: true } } }
-        })
+        MessageService.getGroupConversation(groupId, userId)
       ];
     } else if (screen === 'friend-list') {
       screenPromises = [
@@ -189,12 +175,12 @@ export class AppService {
       screenData = { 
         friend: screenResults[0], 
         friendship: screenResults[1], 
-        conversation: (screenResults[2] || []).reverse() // Back to chronological order
+        conversation: screenResults[2] // Already ordered and decrypted
       };
     } else if (screen === 'group-chat') {
       screenData = { 
         groupDetails: screenResults[0], 
-        messages: (screenResults[1] || []).reverse() 
+        messages: screenResults[1] 
       };
     } else if (screen === 'friend-list') {
       const acceptedRequests = screenResults[0];

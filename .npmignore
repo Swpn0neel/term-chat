@@ -8,6 +8,7 @@
 .agents
 graphify-out
 .session.json
+.sessions/
 ai-debug.log
 scratch/
 PLAN.md

@@ -25,42 +25,39 @@ TermChat CLI bridges the gap between terminal efficiency and modern chat applica
 
 ## Core Features
 
-### Secure Authentication
-- User registration and login system.
-- Secure password hashing using bcrypt.
-- Persistent session management with automatic re-authentication.
-
 ### Real-time Messaging
-- Instant message delivery and reception for both private and group conversations.
-- Heartbeat-driven online/offline status indicators for all users.
-- Real-time unread message counters across all conversations.
-- Virtual rendering engine with `wrap-ansi` for distortion-free terminal output.
+- **Seamless Sync**: Real-time message delivery and reception for both private and group conversations.
+- **Heartbeat System**: Real-time online/offline status indicators for all users.
+- **Distortion-Free UI**: Virtual rendering engine with `wrap-ansi` for stable terminal output.
+
+### End-to-End Encryption (E2EE)
+- **Zero-Knowledge Privacy**: Message content is encrypted locally before being sent to the server.
+- **X25519 & XSalsa20**: Industry-standard cryptographic primitives via `sodium-native`.
+- **Key Vault**: Encrypted backup of your private keys stored on the server (AES-256-GCM), allowing seamless multi-device access using your password as a master key.
+- **Perfect Forward Secrecy (PFS)**: Support for message-level nonces to ensure replay protection.
+
+### Secure Authentication
+- **User Registration**: Secure account creation with bcrypt password hashing.
+- **Vault Recovery**: Automatic restoration of E2EE keys on new devices via your password.
+- **Persistent Sessions**: User-specific local session management in `.sessions/` to keep you logged in.
 
 ### Social Management
-- Global user search and friend request system.
-- Dedicated dashboard for managing pending friend requests.
-- Interactive friend list with real-time status updates and unread counts.
-- Activity-based sorting for friends and groups.
-- Friend removal management.
+- **Global Search**: Find and connect with users by username.
+- **Friend System**: Manage friends, pending requests, and real-time status updates.
+- **Activity Sorting**: Intelligent sorting of conversations based on recent activity and unread counts.
 
 ### Group Messaging
-- Create groups and invite friends as members.
-- Group member management with Admin/Member roles.
-- Real-time group chat with unread indicators.
-- Two-step group creation flow (name → member selection).
+- **Dynamic Groups**: Create groups and invite friends with Admin/Member role support.
+- **Real-time Indicators**: Visual tracking of unread messages and new activity in groups.
 
 ### AI Integration
-- Built-in AI chat screen powered by Google Gemini.
-- Persistent AI conversation history stored in the database.
-- `/clear` command to reset AI chat history.
-- Harmonized UI consistent with the main chat interface.
+- **Built-in Assistant**: Dedicated AI chat screen powered by Google Gemini (Flash 2.5).
+- **Persistent History**: AI conversation context is saved securely in the database.
 
 ### File & Folder Transfer
-- Securely send files and folders between users.
 - **Cloud Storage**: Powered by Cloudflare R2 for reliable, high-speed storage.
 - **Folder Support**: Automatic local zipping of folders before upload.
-- **Persistence**: Transfers remain pending for recipients until accepted or declined.
-- **Status Tracking**: Real-time notifications for new files via the Dashboard inbox.
+- **Inbox Notifications**: Real-time alerts for incoming files via the Dashboard.
 
 ## Technological Stack
 
@@ -71,18 +68,22 @@ TermChat CLI bridges the gap between terminal efficiency and modern chat applica
 - **wrap-ansi**: Robust terminal text wrapping for distortion-free rendering.
 - **Dracula Theme**: High-contrast, vibrant color palette for optimal readability.
 
+### Security & Cryptography
+- **sodium-native**: Native bindings to libsodium for high-performance E2EE (X25519/XSalsa20).
+- **node:crypto**: Built-in Node.js crypto for PBKDF2 key derivation and AES-256-GCM vault sealing.
+- **Bcryptjs**: Industry-standard password hashing for authentication.
+
 ### Data and Backend
 - **Prisma 7**: Type-safe ORM for database operations.
 - **PostgreSQL** (via Supabase): Centralized, scalable relational database.
 - **pg**: Native PostgreSQL driver with Prisma adapter.
-- **Bcryptjs**: Industry-standard password encryption.
 
 ### Artificial Intelligence
 - **Google Generative AI**: Integration with Gemini 2.5 Flash for AI assistant features.
 
 ### Storage & Utilities
 - **Cloudflare R2**: Secure, S3-compatible cloud storage for file transfers.
-- **AWS SDK (@aws-sdk/client-s3)**: For direct-to-cloud uploads and downloads.
+- **AWS SDK**: Direct-to-cloud uploads and downloads.
 - **Archiver**: High-performance folder-to-zip compression for directory transfers.
 - **mime-types**: Automatic detection of file types for secure handling.
 
@@ -90,30 +91,6 @@ TermChat CLI bridges the gap between terminal efficiency and modern chat applica
 - **TypeScript 6**: Type-safe development.
 - **tsup**: Fast, TypeScript-focused ESM bundling.
 - **tsx**: Next-generation TypeScript execution for development.
-
-## Web Documentation & Landing Page
-
-TermChat Official Site serves as a high-fidelity documentation hub and a visual mirror of the CLI experience. It is located in the `website/` directory of this repository.
-
-### Tech Stack:
-- **Framework:** [TanStack Start](https://tanstack.com/router/v1/docs/guide/start/overview) (React 19)
-- **Styling:** Tailwind CSS 4.0
-- **Aesthetics:** CSS-based CRT scanlines and interactive terminal simulations.
-
-### Local Web Setup:
-```bash
-cd website
-bun install
-bun dev
-```
-The site will be available at `http://localhost:3000`.
-
-## Prerequisites
-
-Ensure you have the following installed on your system:
-- **Node.js**: Version 20.0.0 or higher.
-- **PostgreSQL**: A running instance accessible via a connection string (e.g. Supabase).
-- **NPM**: Package manager for dependency management.
 
 ## Installation
 
@@ -193,6 +170,11 @@ TermChat is designed for keyboard-driven efficiency.
 - **Type and Enter**: Send a message.
 - **Arrow Keys (↑↓)**: Scroll through chat history.
 - **Real-time Status**: View if a friend is "Online" or "Offline" via indicators in the chat header.
+- **`/` (Options)**: Type `/` in the message input to open the **Command Suggestions Overlay**. Use this to quickly access:
+  - `/edit [n] [text]`: Edit your Nth last message.
+  - `/delete [n|all]`: Delete your Nth last message or clear the chat history.
+  - `/ai [prompt]`: Ask the built-in AI for help (requires Gemini key).
+  - `/color`: Cycle through different chat accent colors.
 
 ### AI Chat
 - **Type and Enter**: Send a message to Gemini AI.
@@ -229,58 +211,34 @@ term-chat/
 │   ├── index.tsx              # Entry point, renders root App
 │   ├── App.tsx                # Root router, session management, heartbeats
 │   ├── screens/               # Individual view components
-│   │   ├── AuthScreen.tsx
+│   │   ├── AuthScreen.tsx     # Sign-in/Sign-up with Vault support
 │   │   ├── DashboardScreen.tsx
-│   │   ├── AddFriendScreen.tsx
-│   │   ├── PendingRequestsScreen.tsx
-│   │   ├── FriendListScreen.tsx
-│   │   ├── ChatScreen.tsx
-│   │   ├── GroupListScreen.tsx
-│   │   ├── CreateGroupScreen.tsx
-│   │   ├── GroupChatScreen.tsx
-│   │   ├── RemoveFriendScreen.tsx
-│   │   ├── AIChatScreen.tsx
-│   │   ├── SendFileScreen.tsx
-│   │   └── InboxScreen.tsx
+│   │   ├── ChatScreen.tsx     # E2EE enabled chat
+│   │   └── ... (see src/screens)
+│   ├── lib/                   # Shared utilities
+│   │   ├── prisma.ts          # Database client
+│   │   ├── crypto.ts          # E2EE & Vault implementation (X25519/XSalsa20/AES-GCM)
+│   │   └── theme.ts           # Styling system
+│   ├── services/              # Business logic & API calls
+│   │   ├── authService.ts     # Login/SignUp & Vault resolution
+│   │   ├── messageService.ts  # E2EE messaging & history management
+│   │   ├── sessionService.ts  # Per-user local session management
+│   │   ├── socialService.ts   # Friendships & online status
+│   │   ├── groupService.ts    # Group chat logic
+│   │   ├── aiService.ts       # Gemini AI integration
+│   │   └── fileTransferService.ts # R2 storage & folder zipping
 │   ├── components/            # Reusable UI elements
 │   │   ├── Title.tsx          # Cybermedium font branding
 │   │   ├── Heading.tsx        # Section headings
 │   │   ├── AppShell.tsx       # Layout (Header/Content/Input/Hints)
-│   │   ├── Menu.tsx           # Clack-inspired select & multi-select
-│   │   ├── Alert.tsx          # Status alerts
-│   │   ├── Spinner.tsx        # Loading indicators
-│   │   └── TextInput.tsx      # Text input component
-│   ├── services/              # Business logic & DB abstraction
-│   │   ├── authService.ts
-│   │   ├── socialService.ts
-│   │   ├── groupService.ts
-│   │   ├── messageService.ts
-│   │   ├── aiService.ts
-│   │   ├── fileTransferService.ts
-│   │   └── sessionService.ts
-│   ├── lib/                   # Utility libraries
-│   │   ├── prisma.ts          # Prisma client singleton
-│   │   ├── session.ts         # Shared session state
-│   │   ├── dateUtils.ts       # Formatting helpers
-│   │   └── shutdown.ts        # Cleanup & exit logic
+│   │   └── ... (see src/components)
 │   └── generated/             # Prisma generated client (gitignored)
 ├── website/                   # Official landing page & documentation hub
 ├── prisma/
-│   └── schema.prisma          # PostgreSQL schema
-├── prisma.config.ts           # Prisma datasource configuration
-├── termui.config.ts           # TermUI registry settings
-├── tsconfig.json              # TypeScript configuration
-├── tsup.config.ts             # Build config for npm distribution
-└── package.json
+│   └── schema.prisma          # PostgreSQL schema with Vault fields
+├── package.json
+└── ...
 ```
-
-### Key Directories
-- **src/screens**: Contains individual view components (Auth, Dashboard, Chat, etc.).
-- **src/services**: Encapsulates business logic and database interactions (AuthService, SocialService, GroupService, AIService).
-- **src/components**: Reusable UI elements built on top of TermUI with Clack-inspired styling.
-- **src/lib**: Utility libraries for session management, database adapters, and system shutdown handlers.
-- **website**: TanStack Start web application for project documentation and landing page.
-- **prisma**: Defines the data model and schema configuration.
 
 ## License
 

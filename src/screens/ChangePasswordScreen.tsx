@@ -46,7 +46,7 @@ export default function ChangePasswordScreen({ user, navigate }: ChangePasswordS
       
       // Delay navigation to show success message briefly
       setTimeout(() => {
-        SessionService.clearSession();
+        SessionService.clearSession(user.id);
         navigate('auth');
       }, 1500);
     } catch (err: any) {
